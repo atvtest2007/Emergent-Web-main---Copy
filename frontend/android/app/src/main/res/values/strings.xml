@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MaxxPlayer</string>
+    <string name="title_activity_main">MaxxPlayer</string>
+    <string name="package_name">app.maxxplayer.tv</string>
+    <string name="custom_url_scheme">app.maxxplayer.tv</string>
+</resources>

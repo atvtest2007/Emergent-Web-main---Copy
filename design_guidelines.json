@@ -1,0 +1,97 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 5: Jewel & Luxury (Premium OTT Cinematic)",
+  "global_design_rules": {
+    "emotional_tone": "Cinematic, immersive, expensive, frictionless. It must feel like a flagship paid OTT streaming platform.",
+    "border_radius": "rounded-md (Subtle roundness for posters and cards, max 8px. Controls and glass elements should be sharp or slightly rounded).",
+    "glassmorphism": "Used selectively on navigation, player overlays, and modals. Must use backdrop-blur-xl with bg-black/60 and a delicate border-white/10.",
+    "hover_states": "Interactive elements (movie posters) scale up (scale-105) with ring-2 ring-primary and shadow-2xl. Buttons brighten on hover.",
+    "animations": "Framer motion staggered entrances for content rails. Smooth hover transitions (duration-300 ease-out)."
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Manrope",
+    "font_install_instruction": "Import Outfit and Manrope from Google Fonts.",
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-black",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "body": "text-base leading-relaxed text-zinc-300",
+      "small_labels": "text-xs tracking-[0.2em] uppercase font-bold text-zinc-500"
+    }
+  },
+  "colors": {
+    "background": "#050505",
+    "surface": "#121212",
+    "surface_elevated": "#1E1E1E",
+    "primary": "#E50914",
+    "primary_hover": "#F40612",
+    "text_main": "#F5F5F5",
+    "text_muted": "#A1A1AA",
+    "border": "#27272A",
+    "focus_ring": "rgba(229, 9, 20, 0.5)"
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Tailwind standard. Generous p-8 or p-12 for sections. Gap-4 or gap-6 for grid rails.",
+    "content_strategy": "Use 'Content Rails' (horizontal scrolling carousels) for categories like Netflix. Use immersive hero banners spanning the full top width.",
+    "navigation": "Desktop: Fixed Left Sidebar (w-16 or w-20 collapsed, expands to w-64 on hover, z-50). Mobile: Fixed Bottom Navigation. Background: bg-black/80 backdrop-blur-xl border-r border-white/5.",
+    "hero_section": "Must have a 16:9 or max-h-[85vh] cinematic background. Overlay must be a horizontal gradient: bg-gradient-to-r from-[#050505] via-[#050505]/70 to-transparent to ensure text readability on the left.",
+    "epg_grid": "Grid layout. Sticky left column for channel logos. Sticky top row for timeline. Cells are border-collapse. Current program highlighted with primary border."
+  },
+  "component_guidelines": {
+    "buttons": "Primary: bg-[#E50914] text-white hover:bg-[#F40612] font-semibold. Secondary: bg-white/10 text-white hover:bg-white/20 backdrop-blur-md.",
+    "movie_posters": "Aspect ratio 2:3. overflow-hidden rounded-md. Image w-full h-full object-cover. On hover: show play icon overlay.",
+    "tv_series_thumbnails": "Aspect ratio 16:9. Used for episodes, live tv previews, and continue watching.",
+    "player_ui": "Absolute positioned overlay over the video (z-50). Bottom control bar with play/pause, timeline slider, volume, track selector, PiP, fullscreen. Top bar with back button and title. Auto-hides after 3 seconds of inactivity.",
+    "forms_and_inputs": "Login/Settings inputs: bg-[#1E1E1E] border border-white/10 text-white focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914]. Rounded-md.",
+    "data_testid": "ALL interactive components MUST include a data-testid attribute formatted as kebab-case, role-based."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "instruction": "Use lucide-react for all UI icons (Play, Pause, FastForward, Rewind, Settings, Search, Heart, Tv, Film, Monitor, Cast)."
+  },
+  "media": {
+    "hero_backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1773592612185-bd985ac2bfe2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwzfHxjaW5lbWF0aWMlMjBtb3ZpZSUyMHBvc3RlciUyMGRhcmt8ZW58MHx8fHwxNzc4NzY4NDUyfDA&ixlib=rb-4.1.0&q=85",
+        "category": "hero_banner",
+        "description": "Dramatic dark cinematic poster background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1622730000579-e6bde344d6a4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGUlMjBjaW5lbWF0aWMlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3ODc2ODQ1Mnww&ixlib=rb-4.1.0&q=85",
+        "category": "hero_banner",
+        "description": "Landscape cinematic background for hero or login"
+      }
+    ],
+    "movie_posters": [
+      {
+        "url": "https://images.pexels.com/photos/30704104/pexels-photo-30704104.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "poster",
+        "description": "Movie poster placeholder"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1616530940355-351fabd9524b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwxfHxhY3Rpb24lMjBtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3Nzg3Njg0NTd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "poster",
+        "description": "Action movie poster"
+      }
+    ],
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1675726205553-4e348f24da2c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHBob3RvZ3JhcGh5JTIwZGFya3xlbnwwfHx8fDE3Nzg3Njg0NTd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "avatar",
+        "description": "User profile avatar"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Initialize Tailwind config with the custom color tokens and Outfit/Manrope fonts.",
+    "Implement a robust routing structure with React Router.",
+    "Use Shadcn UI for forms, tabs, dropdowns, but heavily customize them to match the dark cinematic theme (remove white backgrounds, use deep #121212 and border-white/10).",
+    "Build a custom Video Player component using HLS.js or HTML5 native video with a custom React overlay for controls to match the premium theme.",
+    "Ensure the Live TV EPG is highly optimized for scrolling. Use a grid or table layout with sticky headers for time and channels.",
+    "Hero sections MUST use the horizontal gradient mask to ensure readability: bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent.",
+    "Build horizontal content rails (Movie/Series rows) with smooth scrolling and hide scrollbars (scrollbar-width: none).",
+    "Implement Xtream Codes login form over a cinematic background.",
+    "Add 'data-testid' to every actionable element for testing."
+  ]
+}

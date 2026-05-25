@@ -1,0 +1,95 @@
+{
+  "name": "maxx-player-desktop",
+  "version": "1.0.0",
+  "description": "Maxx Player — Premium OTT IPTV Streaming (Desktop)",
+  "author": {
+    "name": "Maxx Player",
+    "email": "support@maxxplayer.app"
+  },
+  "homepage": "https://emergent.sh",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "build:web": "cd ../frontend && yarn install --frozen-lockfile && yarn build && rimraf ../desktop/web && cp -r build ../desktop/web",
+    "build:web:win": "cd ../frontend && yarn install --frozen-lockfile && yarn build && (if exist ..\\desktop\\web rmdir /S /Q ..\\desktop\\web) && xcopy build ..\\desktop\\web /E /I /Y",
+    "start": "electron .",
+    "dist:win": "yarn build:web && electron-builder --win --x64",
+    "dist:mac": "yarn build:web && electron-builder --mac --x64 --arm64",
+    "dist:linux": "yarn build:web && electron-builder --linux --x64",
+    "dist:all": "yarn build:web && electron-builder -mwl"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3",
+    "rimraf": "5.0.10"
+  },
+  "build": {
+    "appId": "app.maxxplayer.desktop",
+    "productName": "Maxx Player",
+    "copyright": "Copyright © 2026 Maxx Player",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "web/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.png",
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Maxx Player",
+      "license": "LICENSE.txt",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "category": "public.app-category.entertainment",
+      "icon": "assets/icon.png",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Maxx Player ${version}",
+      "artifactName": "${productName}-${version}-${arch}.dmg"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "category": "AudioVideo",
+      "icon": "assets/icon.png",
+      "synopsis": "Premium OTT IPTV streaming player",
+      "description": "Maxx Player is a premium OTT streaming experience with Xtream Codes support, M3U playlists, EPG, and multi-engine playback.",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${arch}.AppImage"
+    }
+  }
+}

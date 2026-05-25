@@ -1,0 +1,48 @@
+{
+  "summary": "Comprehensive backend testing of Maxx Player API. 34/34 pytest tests passed against the public REACT_APP_BACKEND_URL. Covered: playlists CRUD (demo/m3u/invalid-xtream), account info, content categories/streams/details/EPG/stream-url/search, favorites, watch progress + continue-watching filter (2%-95%), settings defaults+update, and HLS stream proxy. Identified one minor API response bug: POST /api/playlists/demo returns a stale doc (is_active=false) when demo already exists, although DB activation is correctly applied (verified via GET /api/playlists/active).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/playlists/demo",
+        "issue": "When demo playlist already exists, the response body is the doc fetched BEFORE the activation update_one() runs, so the returned object has is_active=false even though MongoDB is correctly updated to is_active=true. The state in DB is correct (verified via GET /api/playlists/active). Fix: re-fetch after the update, e.g. `existing = await db.playlists.find_one({'id': existing['id']}, {'_id': 0})` before return, or simply set `existing['is_active'] = True` before return."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_maxx_player.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix stale response in POST /api/playlists/demo when demo already exists — return doc reflecting current active state (set is_active=True on existing dict before returning, or re-query after the update).",
+    "Consider returning the updated playlist from POST /api/playlists/{id}/activate too (currently returns {'ok': True, 'active': id}) — minor consistency nit."
+  ],
+  "critical_code_review_comments": [
+    "server.py is ~580 lines: still manageable but approaching the threshold; consider splitting into routers/ (playlists.py, content.py, user.py, proxy.py) for maintainability.",
+    "POST /api/playlists/demo: returns stale 'existing' dict (see backend_issues.minor).",
+    "GET /api/proxy/stream: does an extra HEAD probe in addition to streaming GET — for many HLS origins HEAD may 405/403 (currently swallowed). Acceptable but adds latency. Consider passing through the streamed response's Content-Type header from the GET itself.",
+    "GET /api/proxy/stream: no SSRF protection or URL allowlist — any internal/private URL could be reached. For a public-facing deploy, restrict to http/https + block RFC1918/loopback hosts.",
+    "GET /api/content/search?q=<empty> raises 422 (FastAPI default) — fine, but error format differs from app's HTTPException JSON. Consider explicit validation for consistency.",
+    "Pydantic Playlist model stores password in plaintext in Mongo; list_playlists() masks it in response but it's still raw at rest. Acceptable for single-user local OTT but worth noting.",
+    "@app.on_event('shutdown') is deprecated in modern FastAPI — prefer lifespan context manager.",
+    "DEMO live stream URL https://bloomberg.com/media-manifest/streams/us-event.m3u8 (demo-live-4) is unlikely to be a valid public HLS endpoint — most likely 403/404 in client. Curated demo URLs should be verified."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_maxx_player.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (34/34 tests pass)",
+    "frontend": "not tested (backend-only request)"
+  },
+  "test_credentials": "None required — demo mode bypasses auth.",
+  "seed_data_creation": "Tests use isolated TEST_* profile_ids for favorites/progress/settings and clean up after themselves via teardown_method. Tests create/delete temporary m3u playlists and re-activate demo afterward.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend is fully green. Tests live at /app/backend/tests/test_maxx_player.py — run with `pytest /app/backend/tests/ -v --junitxml=/app/test_reports/pytest/pytest_results.xml`. Demo playlist must be the active one; the autouse session fixture handles that. If main agent fixes the stale-response bug in POST /api/playlists/demo, the fixture's tolerant verification (GET /playlists/active) will still pass, but TestPlaylists.test_demo_idempotent should be tightened to also assert r2.json()['is_active'] is True after the fix.",
+  "rca of the issue": "POST /api/playlists/demo bug RCA — Code path: `existing = await db.playlists.find_one(...)` → if existing → run update_many+update_one to set is_active=True on demo → `return existing`. The Python local 'existing' is a snapshot taken before the writes, so its is_active reflects pre-update state (False after another playlist was previously activated). Reproduction: 1) POST /api/playlists/demo, 2) Create any m3u playlist (which deactivates demo), 3) POST /api/playlists/demo again — response has is_active=false although GET /api/playlists/active correctly returns the demo with is_active=true. Mitigation: either mutate `existing['is_active']=True` before return, or re-query after the update_one."
+}
