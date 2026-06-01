@@ -1,20 +1,22 @@
-"""Maxx Player — FastAPI backend."""
+"""Maxx Player — FastAPI backend with PostgreSQL."""
 from __future__ import annotations
 
 import logging
 import os
 import uuid
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Body, FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
 import httpx
+import asyncpg
 
 from xtream_service import (
     DEMO_CATEGORIES,
@@ -27,15 +29,38 @@ from xtream_service import (
     parse_m3u,
 )
 
-
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-mongo_url = os.environ["MONGO_URL"]
-mongo = AsyncIOMotorClient(mongo_url)
-db = mongo[os.environ["DB_NAME"]]
+db_pool = None
 
-app = FastAPI(title="Maxx Player API")
+async def init_connection(conn):
+    await conn.set_type_codec(
+        'jsonb',
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema='pg_catalog'
+    )
+    await conn.set_type_codec(
+        'json',
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema='pg_catalog'
+    )
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global db_pool
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        db_pool = await asyncpg.create_pool(db_url, init=init_connection)
+    else:
+        logging.warning("DATABASE_URL is not set!")
+    yield
+    if db_pool:
+        await db_pool.close()
+
+app = FastAPI(title="Maxx Player API", lifespan=lifespan)
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -88,11 +113,31 @@ class ProgressUpdate(BaseModel):
 
 # ---------------------- Helpers ---------------------- #
 
+async def get_active_playlist() -> dict[str, Any] | None:
+    if not db_pool:
+        return None
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM playlists WHERE is_active = true LIMIT 1")
+        if row:
+            d = dict(row)
+            d["id"] = str(d["id"])
+            if d.get("created_at"):
+                d["created_at"] = d["created_at"].isoformat()
+            return d
+    return None
+
 async def get_playlist(playlist_id: str) -> dict[str, Any]:
-    pl = await db.playlists.find_one({"id": playlist_id}, {"_id": 0})
-    if not pl:
-        raise HTTPException(status_code=404, detail="Playlist not found")
-    return pl
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="DB not initialized")
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM playlists WHERE id = $1::uuid", playlist_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Playlist not found")
+        d = dict(row)
+        d["id"] = str(d["id"])
+        if d.get("created_at"):
+            d["created_at"] = d["created_at"].isoformat()
+        return d
 
 
 def xtream_from_playlist(pl: dict[str, Any]) -> XtreamClient:
@@ -110,11 +155,11 @@ async def root():
 
 # ---------------------- Playlist management ---------------------- #
 
-@api.post("/playlists", response_model=Playlist)
+@api.post("/playlists")
 async def create_playlist(payload: PlaylistCreate):
     pl = Playlist(**payload.model_dump())
     doc = pl.model_dump()
-    # Verify Xtream credentials before saving
+    
     if pl.type == "xtream":
         if not (pl.server_url and pl.username and pl.password):
             raise HTTPException(status_code=400, detail="server_url, username, password required")
@@ -125,7 +170,7 @@ async def create_playlist(payload: PlaylistCreate):
                 raise HTTPException(status_code=401, detail="Invalid Xtream credentials")
         except HTTPException:
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=400, detail=f"Cannot reach Xtream server: {e}") from e
     elif pl.type == "m3u":
         if not (pl.m3u_url or pl.m3u_content):
@@ -136,47 +181,60 @@ async def create_playlist(payload: PlaylistCreate):
                     r = await client.get(pl.m3u_url)
                     r.raise_for_status()
                     doc["m3u_content"] = r.text
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Cannot fetch M3U URL: {e}") from e
-    # Deactivate other playlists
-    await db.playlists.update_many({}, {"$set": {"is_active": False}})
-    doc["is_active"] = True
-    await db.playlists.insert_one(doc)
-    doc.pop("_id", None)
+    
+    async with db_pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute("UPDATE playlists SET is_active = false")
+            doc["is_active"] = True
+            await conn.execute('''
+                INSERT INTO playlists (id, name, type, server_url, username, password, m3u_url, m3u_content, is_active, auto_connect)
+                VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ''', doc["id"], doc["name"], doc["type"], doc.get("server_url"), doc.get("username"), doc.get("password"), doc.get("m3u_url"), doc.get("m3u_content"), doc["is_active"], doc["auto_connect"])
+            
     return doc
 
 
 @api.get("/playlists")
 async def list_playlists():
-    docs = await db.playlists.find({}, {"_id": 0}).to_list(100)
-    # Don't leak passwords
-    for d in docs:
-        if d.get("password"):
-            d["password_masked"] = "•" * 8
-    return docs
+    if not db_pool:
+        return []
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM playlists ORDER BY created_at DESC")
+        docs = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            if d.get("created_at"):
+                d["created_at"] = d["created_at"].isoformat()
+            if d.get("password"):
+                d["password_masked"] = "•" * 8
+            docs.append(d)
+        return docs
 
 
 @api.get("/playlists/active")
-async def get_active_playlist():
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
-    if not pl:
-        return None
-    return pl
+async def get_active_playlist_endpoint():
+    return await get_active_playlist()
 
 
 @api.post("/playlists/{playlist_id}/activate")
 async def activate_playlist(playlist_id: str):
     pl = await get_playlist(playlist_id)
-    await db.playlists.update_many({}, {"$set": {"is_active": False}})
-    await db.playlists.update_one({"id": playlist_id}, {"$set": {"is_active": True}})
+    async with db_pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute("UPDATE playlists SET is_active = false")
+            await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid", playlist_id)
     return {"ok": True, "active": pl["id"]}
 
 
 @api.delete("/playlists/{playlist_id}")
 async def delete_playlist(playlist_id: str):
-    r = await db.playlists.delete_one({"id": playlist_id})
-    if r.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Playlist not found")
+    async with db_pool.acquire() as conn:
+        res = await conn.execute("DELETE FROM playlists WHERE id = $1::uuid", playlist_id)
+        if res == "DELETE 0":
+            raise HTTPException(status_code=404, detail="Playlist not found")
     return {"ok": True}
 
 
@@ -184,25 +242,36 @@ async def delete_playlist(playlist_id: str):
 
 @api.post("/playlists/demo")
 async def create_demo_playlist():
-    existing = await db.playlists.find_one({"type": "demo"}, {"_id": 0})
-    if existing:
-        await db.playlists.update_many({}, {"$set": {"is_active": False}})
-        await db.playlists.update_one({"id": existing["id"]}, {"$set": {"is_active": True}})
-        existing["is_active"] = True
-        return existing
-    pl = Playlist(name="Maxx Demo Library", type="demo", is_active=True)
-    doc = pl.model_dump()
-    await db.playlists.update_many({}, {"$set": {"is_active": False}})
-    await db.playlists.insert_one(doc)
-    doc.pop("_id", None)
-    return doc
+    async with db_pool.acquire() as conn:
+        existing = await conn.fetchrow("SELECT * FROM playlists WHERE type = 'demo' LIMIT 1")
+        if existing:
+            eid = str(existing["id"])
+            async with conn.transaction():
+                await conn.execute("UPDATE playlists SET is_active = false")
+                await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid", eid)
+            d = dict(existing)
+            d["id"] = eid
+            d["is_active"] = True
+            if d.get("created_at"):
+                d["created_at"] = d["created_at"].isoformat()
+            return d
+            
+        pl = Playlist(name="Maxx Demo Library", type="demo", is_active=True)
+        doc = pl.model_dump()
+        async with conn.transaction():
+            await conn.execute("UPDATE playlists SET is_active = false")
+            await conn.execute('''
+                INSERT INTO playlists (id, name, type, is_active)
+                VALUES ($1::uuid, $2, $3, $4)
+            ''', doc["id"], doc["name"], doc["type"], True)
+        return doc
 
 
 # ---------------------- Account info ---------------------- #
 
 @api.get("/account/info")
 async def account_info():
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -211,7 +280,7 @@ async def account_info():
         client = xtream_from_playlist(pl)
         try:
             return await client.account_info()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
     if pl["type"] == "m3u":
         items = parse_m3u(pl.get("m3u_content", "") or "")
@@ -235,7 +304,7 @@ def _filter_demo_by_category(items: list[dict[str, Any]], category_id: Optional[
 async def get_categories(content_type: str):
     if content_type not in ("live", "vod", "series"):
         raise HTTPException(status_code=400, detail="Invalid content type")
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -244,7 +313,7 @@ async def get_categories(content_type: str):
         client = xtream_from_playlist(pl)
         try:
             return await client.categories(content_type)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
     if pl["type"] == "m3u":
         items = parse_m3u(pl.get("m3u_content", "") or "")
@@ -259,20 +328,18 @@ async def get_categories(content_type: str):
 async def get_streams(content_type: str, category_id: Optional[str] = None):
     if content_type not in ("live", "vod", "series"):
         raise HTTPException(status_code=400, detail="Invalid content type")
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
         source = {"live": DEMO_LIVE_CHANNELS, "vod": DEMO_MOVIES, "series": DEMO_SERIES}[content_type]
-        # Add playable URL helper
         return _filter_demo_by_category(source, category_id)
     if pl["type"] == "xtream":
         client = xtream_from_playlist(pl)
         try:
             data = await client.streams(content_type, category_id)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
-        # Inject computed stream URL for ease of use
         for it in data:
             sid = it.get("stream_id") or it.get("series_id")
             if not sid:
@@ -295,7 +362,7 @@ async def get_streams(content_type: str, category_id: Optional[str] = None):
 
 @api.get("/content/movie/{movie_id}")
 async def get_movie_details(movie_id: str):
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -313,7 +380,7 @@ async def get_movie_details(movie_id: str):
 
 @api.get("/content/series/{series_id}")
 async def get_series_details(series_id: str):
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -344,7 +411,7 @@ async def get_series_details(series_id: str):
 
 @api.get("/content/epg/{stream_id}")
 async def get_epg(stream_id: str, limit: int = 12):
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -353,7 +420,7 @@ async def get_epg(stream_id: str, limit: int = 12):
         client = xtream_from_playlist(pl)
         try:
             return await client.short_epg(stream_id, limit)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
     return {"epg_listings": []}
 
@@ -362,11 +429,10 @@ async def get_epg(stream_id: str, limit: int = 12):
 
 @api.get("/content/stream-url")
 async def stream_url(content_type: str, content_id: str, ext: Optional[str] = None):
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
-        # Pull from demo data
         if content_type == "live":
             for c in DEMO_LIVE_CHANNELS:
                 if c["stream_id"] == content_id:
@@ -410,7 +476,6 @@ async def proxy_stream(url: str = Query(...)):
                 async for chunk in r.aiter_bytes():
                     yield chunk
 
-    # Probe headers
     try:
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
             head = await client.head(url)
@@ -429,34 +494,40 @@ async def proxy_stream(url: str = Query(...)):
 
 @api.get("/user/favorites")
 async def list_favorites(profile_id: str = "default"):
-    docs = await db.favorites.find({"profile_id": profile_id}, {"_id": 0}).to_list(500)
-    return docs
+    if not db_pool:
+        return []
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM favorites WHERE profile_id = $1 ORDER BY added_at DESC LIMIT 500", profile_id)
+        docs = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            if d.get("added_at"):
+                d["added_at"] = d["added_at"].isoformat()
+            docs.append(d)
+        return docs
 
 
 @api.post("/user/favorites")
 async def add_favorite(payload: FavoriteCreate):
-    existing = await db.favorites.find_one(
-        {"profile_id": payload.profile_id, "content_id": payload.content_id, "content_type": payload.content_type},
-        {"_id": 0},
-    )
-    if existing:
-        return existing
-    doc = {
-        "id": str(uuid.uuid4()),
-        "profile_id": payload.profile_id,
-        "content_type": payload.content_type,
-        "content_id": payload.content_id,
-        "content_data": payload.content_data,
-        "added_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.favorites.insert_one(doc)
-    doc.pop("_id", None)
-    return doc
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow('''
+            INSERT INTO favorites (profile_id, content_type, content_id, content_data)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (profile_id, content_type, content_id) DO UPDATE SET added_at = now()
+            RETURNING *
+        ''', payload.profile_id, payload.content_type, payload.content_id, payload.content_data)
+        d = dict(row)
+        d["id"] = str(d["id"])
+        if d.get("added_at"):
+            d["added_at"] = d["added_at"].isoformat()
+        return d
 
 
 @api.delete("/user/favorites/{content_type}/{content_id}")
 async def remove_favorite(content_type: str, content_id: str, profile_id: str = "default"):
-    await db.favorites.delete_one({"profile_id": profile_id, "content_type": content_type, "content_id": content_id})
+    async with db_pool.acquire() as conn:
+        await conn.execute("DELETE FROM favorites WHERE profile_id = $1 AND content_type = $2 AND content_id = $3", profile_id, content_type, content_id)
     return {"ok": True}
 
 
@@ -464,42 +535,57 @@ async def remove_favorite(content_type: str, content_id: str, profile_id: str = 
 
 @api.post("/user/progress")
 async def upsert_progress(payload: ProgressUpdate):
-    doc = {
-        "profile_id": payload.profile_id,
-        "content_type": payload.content_type,
-        "content_id": payload.content_id,
-        "position": payload.position,
-        "duration": payload.duration,
-        "progress": (payload.position / payload.duration) if payload.duration else 0,
-        "content_data": payload.content_data,
-        "last_watched_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.watch_progress.update_one(
-        {"profile_id": payload.profile_id, "content_type": payload.content_type, "content_id": payload.content_id},
-        {"$set": doc, "$setOnInsert": {"id": str(uuid.uuid4())}},
-        upsert=True,
-    )
+    progress = (payload.position / payload.duration) if payload.duration else 0
+    async with db_pool.acquire() as conn:
+        await conn.execute('''
+            INSERT INTO watch_progress (profile_id, content_type, content_id, position, duration, progress, content_data)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (profile_id, content_type, content_id) DO UPDATE SET 
+                position = EXCLUDED.position,
+                duration = EXCLUDED.duration,
+                progress = EXCLUDED.progress,
+                content_data = EXCLUDED.content_data,
+                last_watched_at = now()
+        ''', payload.profile_id, payload.content_type, payload.content_id, payload.position, payload.duration, progress, payload.content_data)
     return {"ok": True}
 
 
 @api.get("/user/progress")
 async def list_progress(profile_id: str = "default"):
-    docs = await db.watch_progress.find({"profile_id": profile_id}, {"_id": 0}).sort("last_watched_at", -1).to_list(200)
-    return docs
+    if not db_pool:
+        return []
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM watch_progress WHERE profile_id = $1 ORDER BY last_watched_at DESC LIMIT 200", profile_id)
+        docs = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            if d.get("last_watched_at"):
+                d["last_watched_at"] = d["last_watched_at"].isoformat()
+            docs.append(d)
+        return docs
 
 
 @api.get("/user/continue-watching")
 async def continue_watching(profile_id: str = "default"):
-    docs = await db.watch_progress.find(
-        {"profile_id": profile_id, "progress": {"$gt": 0.02, "$lt": 0.95}},
-        {"_id": 0},
-    ).sort("last_watched_at", -1).to_list(50)
-    return docs
+    if not db_pool:
+        return []
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM watch_progress WHERE profile_id = $1 AND progress > 0.02 AND progress < 0.95 ORDER BY last_watched_at DESC LIMIT 50", profile_id)
+        docs = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            if d.get("last_watched_at"):
+                d["last_watched_at"] = d["last_watched_at"].isoformat()
+            docs.append(d)
+        return docs
 
 
 @api.delete("/user/progress/{content_type}/{content_id}")
 async def delete_progress(content_type: str, content_id: str, profile_id: str = "default"):
-    await db.watch_progress.delete_one({"profile_id": profile_id, "content_type": content_type, "content_id": content_id})
+    async with db_pool.acquire() as conn:
+        await conn.execute("DELETE FROM watch_progress WHERE profile_id = $1 AND content_type = $2 AND content_id = $3", profile_id, content_type, content_id)
     return {"ok": True}
 
 
@@ -507,7 +593,7 @@ async def delete_progress(content_type: str, content_id: str, profile_id: str = 
 
 @api.get("/content/search")
 async def search_content(q: str = Query(..., min_length=1)):
-    pl = await db.playlists.find_one({"is_active": True}, {"_id": 0})
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     q_lower = q.lower()
@@ -525,7 +611,7 @@ async def search_content(q: str = Query(..., min_length=1)):
             results["live"] = [c for c in live if q_lower in (c.get("name", "") or "").lower()][:50]
             results["movies"] = [m for m in vod if q_lower in (m.get("name", "") or "").lower()][:50]
             results["series"] = [s for s in series if q_lower in (s.get("name", "") or "").lower()][:50]
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
     elif pl["type"] == "m3u":
         items = parse_m3u(pl.get("m3u_content", "") or "")
@@ -537,29 +623,45 @@ async def search_content(q: str = Query(..., min_length=1)):
 
 @api.get("/user/settings")
 async def get_settings(profile_id: str = "default"):
-    s = await db.settings.find_one({"profile_id": profile_id}, {"_id": 0})
-    if not s:
-        return {
-            "profile_id": profile_id,
-            "preferred_player": "hls",
-            "buffer_size": 30,
-            "hardware_acceleration": True,
-            "subtitle_language": "en",
-            "audio_language": "en",
-            "autoplay_next": True,
-            "preview_on_hover": True,
-            "analytics": False,
-        }
-    return s
+    if not db_pool:
+        return {}
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM settings WHERE profile_id = $1", profile_id)
+        if not row:
+            return {
+                "profile_id": profile_id,
+                "preferred_player": "hls",
+                "buffer_size": 30,
+                "hardware_acceleration": True,
+                "subtitle_language": "en",
+                "audio_language": "en",
+                "autoplay_next": True,
+                "preview_on_hover": True,
+                "analytics": False,
+            }
+        return dict(row)
 
 
 @api.put("/user/settings")
 async def update_settings(settings: dict[str, Any] = Body(...)):
     pid = settings.get("profile_id", "default")
-    settings["profile_id"] = pid
-    await db.settings.update_one({"profile_id": pid}, {"$set": settings}, upsert=True)
-    s = await db.settings.find_one({"profile_id": pid}, {"_id": 0})
-    return s
+    async with db_pool.acquire() as conn:
+        await conn.execute('''
+            INSERT INTO settings (profile_id, preferred_player, buffer_size, hardware_acceleration, subtitle_language, audio_language, autoplay_next, preview_on_hover, analytics)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (profile_id) DO UPDATE SET
+                preferred_player = EXCLUDED.preferred_player,
+                buffer_size = EXCLUDED.buffer_size,
+                hardware_acceleration = EXCLUDED.hardware_acceleration,
+                subtitle_language = EXCLUDED.subtitle_language,
+                audio_language = EXCLUDED.audio_language,
+                autoplay_next = EXCLUDED.autoplay_next,
+                preview_on_hover = EXCLUDED.preview_on_hover,
+                analytics = EXCLUDED.analytics
+        ''', pid, settings.get("preferred_player", "hls"), settings.get("buffer_size", 30), settings.get("hardware_acceleration", True), settings.get("subtitle_language", "en"), settings.get("audio_language", "en"), settings.get("autoplay_next", True), settings.get("preview_on_hover", True), settings.get("analytics", False))
+        
+        row = await conn.fetchrow("SELECT * FROM settings WHERE profile_id = $1", pid)
+        return dict(row)
 
 
 # ---------------------- Mount ---------------------- #
@@ -573,8 +675,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    mongo.close()
