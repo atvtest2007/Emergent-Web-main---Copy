@@ -57,7 +57,11 @@ export default function Login() {
             await refreshList();
             nav("/home");
         } catch (err) {
-            toast.error(err?.response?.data?.detail || "Login failed");
+            if (err.message === "Network Error") {
+                toast.error("Cannot connect to backend server. Is it running?");
+            } else {
+                toast.error(err?.response?.data?.detail || "Login failed");
+            }
         } finally {
             setLoading(false);
         }
