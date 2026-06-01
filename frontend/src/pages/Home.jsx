@@ -6,6 +6,7 @@ import ContentRail from "@/components/ContentRail";
 import PosterCard from "@/components/PosterCard";
 import ChannelCard from "@/components/ChannelCard";
 import { Loader2, Tv, Film, Clapperboard, Sparkles, Activity } from "lucide-react";
+import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function Home() {
     const nav = useNavigate();
@@ -16,6 +17,7 @@ export default function Home() {
     const [movies, setMovies] = useState([]);
     const [series, setSeries] = useState([]);
     const [cont, setCont] = useState([]);
+    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
 
     useEffect(() => {
         (async () => {
@@ -44,9 +46,10 @@ export default function Home() {
 
     const featured = useMemo(() => {
         if (movies.length === 0 && series.length === 0) return null;
-        const pool = [...movies.slice(0, 5), ...series.slice(0, 3)];
+        const pool = [...movies.slice(0, 5), ...series.slice(0, 3)].filter(it => !isCategoryLocked(it.category_name));
+        if (pool.length === 0) return null;
         return pool[Math.floor(Math.random() * pool.length)];
-    }, [movies, series]);
+    }, [movies, series, isCategoryLocked]);
 
     if (loading) {
         return (
@@ -110,21 +113,26 @@ export default function Home() {
 
             {cont.length > 0 && (
                 <ContentRail title="Continue Watching" subtitle="Pick up where you left off" testId="rail-continue">
-                    {cont.map((c) => (
-                        <PosterCard
-                            key={c.content_id}
-                            item={c.content_data || { name: c.content_id, stream_id: c.content_id }}
-                            type={c.content_type === "series" || c.content_type === "episode" ? "series" : "movie"}
-                            progress={c.progress}
-                        />
-                    ))}
+                    {cont.map((c) => {
+                        const itemData = c.content_data || { name: c.content_id, stream_id: c.content_id };
+                        return (
+                            <PosterCard
+                                key={c.content_id}
+                                item={itemData}
+                                type={c.content_type === "series" || c.content_type === "episode" ? "series" : "movie"}
+                                progress={c.progress}
+                                isLocked={isCategoryLocked(itemData.category_name)}
+                                onUnlock={unlock}
+                            />
+                        );
+                    })}
                 </ContentRail>
             )}
 
             {movies.length > 0 && (
                 <ContentRail title="Trending Movies" subtitle="Hand-picked for you" testId="rail-movies">
                     {movies.slice(0, 20).map((m) => (
-                        <PosterCard key={m.stream_id} item={m} type="movie" />
+                        <PosterCard key={m.stream_id} item={m} type="movie" isLocked={isCategoryLocked(m.category_name)} onUnlock={unlock} />
                     ))}
                 </ContentRail>
             )}
@@ -132,7 +140,7 @@ export default function Home() {
             {series.length > 0 && (
                 <ContentRail title="Featured Series" subtitle="Premium binge worthy" testId="rail-series">
                     {series.slice(0, 20).map((s) => (
-                        <PosterCard key={s.series_id} item={s} type="series" />
+                        <PosterCard key={s.series_id} item={s} type="series" isLocked={isCategoryLocked(s.category_name)} onUnlock={unlock} />
                     ))}
                 </ContentRail>
             )}
@@ -149,7 +157,7 @@ export default function Home() {
                         </Link>
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {live.slice(0, 6).map((c) => <ChannelCard key={c.stream_id} channel={c} />)}
+                        {live.slice(0, 6).map((c) => <ChannelCard key={c.stream_id} channel={c} isLocked={isCategoryLocked(c.category_name)} onUnlock={unlock} />)}
                     </div>
                 </section>
             )}
@@ -161,6 +169,7 @@ export default function Home() {
                     <p className="text-zinc-400">Your playlist returned no streams. Try a different account or load the demo library.</p>
                 </div>
             )}
+            {renderModal()}
         </div>
     );
 }

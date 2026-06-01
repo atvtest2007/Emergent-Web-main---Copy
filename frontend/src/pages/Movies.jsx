@@ -3,6 +3,7 @@ import { Content } from "@/lib/api";
 import PosterCard from "@/components/PosterCard";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search, Film } from "lucide-react";
+import { useParentalControls } from "@/hooks/useParentalControls";
 
 function Catalog({ type, title, subtitle, posterType }) {
     const [loading, setLoading] = useState(true);
@@ -10,6 +11,7 @@ function Catalog({ type, title, subtitle, posterType }) {
     const [cats, setCats] = useState([]);
     const [cat, setCat] = useState("all");
     const [q, setQ] = useState("");
+    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
 
     useEffect(() => {
         (async () => {
@@ -91,10 +93,13 @@ function Catalog({ type, title, subtitle, posterType }) {
                             key={it.stream_id || it.series_id}
                             item={it}
                             type={posterType}
+                            isLocked={isCategoryLocked(it.category_name)}
+                            onUnlock={unlock}
                         />
                     ))}
                 </div>
             )}
+            {renderModal()}
         </div>
     );
 }

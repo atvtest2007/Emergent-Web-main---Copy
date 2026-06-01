@@ -46,5 +46,14 @@ CREATE TABLE IF NOT EXISTS settings (
     audio_language TEXT DEFAULT 'en',
     autoplay_next BOOLEAN DEFAULT true,
     preview_on_hover BOOLEAN DEFAULT true,
-    analytics BOOLEAN DEFAULT false
+    analytics BOOLEAN DEFAULT false,
+    parental_pin VARCHAR(10) DEFAULT NULL,
+    locked_categories JSONB DEFAULT '[]'::jsonb
+);
+
+CREATE TABLE IF NOT EXISTS search_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id TEXT NOT NULL DEFAULT 'default',
+    query TEXT NOT NULL,
+    searched_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

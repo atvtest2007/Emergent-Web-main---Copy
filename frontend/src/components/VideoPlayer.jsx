@@ -10,8 +10,9 @@ import {
 import {
     DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
     DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuLabel,
-    DropdownMenuSeparator,
+    DropdownMenuSeparator, DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 import PlayerSwitcher from "@/components/PlayerSwitcher";
 import { localPref, ASPECT_OPTIONS } from "@/lib/store";
@@ -410,6 +411,37 @@ export default function VideoPlayer({
         setCurrentTime(t);
     };
 
+    const searchOnlineSubtitles = async () => {
+        try {
+            toast.loading("Searching for subtitles...", { id: "sub-search" });
+            const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/content/subtitles?title=${encodeURIComponent(title)}&language=en`;
+            const v = videoRef.current;
+            if (!v) return;
+            const track = document.createElement("track");
+            track.kind = "captions";
+            track.label = "Online (English)";
+            track.srclang = "en";
+            track.src = url;
+            
+            track.addEventListener("load", () => {
+                toast.success("Subtitles loaded successfully", { id: "sub-search" });
+                // Let the native loadedmetadata catch it, or force a track refresh
+                setTimeout(() => {
+                    if (v.textTracks && v.textTracks.length > 0) {
+                        setSubtitle(v.textTracks.length - 1);
+                    }
+                }, 500);
+            });
+            track.addEventListener("error", () => {
+                toast.error("Subtitles not found", { id: "sub-search" });
+                try { v.removeChild(track); } catch {}
+            });
+            v.appendChild(track);
+        } catch (e) {
+            toast.error("Failed to load subtitles", { id: "sub-search" });
+        }
+    };
+
     return (
         <div
             ref={containerRef}
@@ -579,6 +611,14 @@ export default function VideoPlayer({
                                         </DropdownMenuRadioItem>
                                     ))}
                                 </DropdownMenuRadioGroup>
+                                {!isLive && (
+                                    <>
+                                        <DropdownMenuSeparator className="bg-white/10" />
+                                        <DropdownMenuItem onSelect={searchOnlineSubtitles} className="cursor-pointer text-[#E50914] font-semibold text-xs justify-center hover:bg-[#E50914]/20">
+                                            Search Online
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
                                 <DropdownMenuSeparator className="bg-white/10" />
                                 <DropdownMenuLabel>Audio Track</DropdownMenuLabel>
                                 <DropdownMenuRadioGroup value={String(selectedAudio)} onValueChange={(v) => setAudioTrack(parseInt(v))}>

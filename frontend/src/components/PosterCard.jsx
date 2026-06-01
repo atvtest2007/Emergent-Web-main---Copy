@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Play, Heart, Star } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Play, Heart, Star, Lock } from "lucide-react";
 
-export default function PosterCard({ item, type, progress }) {
+export default function PosterCard({ item, type, progress, isLocked, onUnlock }) {
+    const nav = useNavigate();
     const [hover, setHover] = useState(false);
     const cardRef = useRef(null);
 
@@ -17,9 +18,17 @@ export default function PosterCard({ item, type, progress }) {
             ? `/series/${id}`
             : `/watch/${type}/${id}`;
 
+    const handleClick = (e) => {
+        if (isLocked) {
+            e.preventDefault();
+            if (onUnlock) onUnlock(() => nav(linkTo));
+        }
+    };
+
     return (
         <Link
             to={linkTo}
+            onClick={handleClick}
             ref={cardRef}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
@@ -56,7 +65,7 @@ export default function PosterCard({ item, type, progress }) {
                 {/* Play overlay */}
                 <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${hover ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
                     <div className="w-14 h-14 rounded-full bg-[#E50914] flex items-center justify-center shadow-2xl shadow-red-900/60">
-                        <Play className="w-7 h-7 text-white fill-white ml-0.5" />
+                        {isLocked ? <Lock className="w-6 h-6 text-white" /> : <Play className="w-7 h-7 text-white fill-white ml-0.5" />}
                     </div>
                 </div>
 

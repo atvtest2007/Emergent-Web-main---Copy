@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Content, Progress } from "@/lib/api";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Loader2 } from "lucide-react";
 
 export default function Watch() {
     const { type, id } = useParams();
+    const { search } = useLocation();
     const nav = useNavigate();
     const [loading, setLoading] = useState(true);
     const [src, setSrc] = useState(null);
@@ -13,18 +14,23 @@ export default function Watch() {
     const [initialPos, setInitialPos] = useState(0);
     const lastSaveRef = useRef(0);
 
-    const isLive = type === "live";
+    const isLive = type === "live" || type === "catchup";
     const apiType =
         type === "vod" ? "vod" :
         type === "movie" ? "vod" :
         type === "live" ? "live" :
+        type === "catchup" ? "catchup" :
         type === "episode" ? "episode" : type;
 
     useEffect(() => {
         (async () => {
             setLoading(true);
             try {
-                const r = await Content.streamUrl(apiType, id);
+                const searchParams = new URLSearchParams(search);
+                const startParam = searchParams.get("start");
+                const durationParam = searchParams.get("duration");
+                
+                const r = await Content.streamUrl(apiType, id, null, startParam, durationParam);
                 setSrc(r?.url);
 
                 // Try to load richer metadata
@@ -33,11 +39,11 @@ export default function Watch() {
                         const m = await Content.movie(id);
                         setMeta({ title: m.name || m.title || "Movie", poster: m.backdrop || m.stream_icon });
                     } catch { setMeta({ title: "Movie", poster: "" }); }
-                } else if (type === "live") {
+                } else if (type === "live" || type === "catchup") {
                     try {
                         const list = await Content.streams("live");
                         const c = (list || []).find((x) => x.stream_id === id);
-                        if (c) setMeta({ title: c.name, poster: c.stream_icon });
+                        if (c) setMeta({ title: type === "catchup" ? `Catchup: ${c.name}` : c.name, poster: c.stream_icon });
                     } catch { /* ignore */ }
                 } else if (type === "episode") {
                     setMeta({ title: "Episode", poster: "" });

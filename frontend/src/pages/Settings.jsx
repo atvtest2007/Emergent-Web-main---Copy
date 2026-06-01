@@ -12,6 +12,7 @@ import { PLAYER_OPTIONS } from "@/lib/store";
 import { Loader2, Settings as Cog, Cpu, Subtitles, Volume2, Network, HardDrive, MonitorSmartphone, UserCircle2, Shield, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
 
 const TABS = [
     { id: "playback", label: "Playback", icon: Cog },
@@ -22,6 +23,7 @@ const TABS = [
     { id: "cache", label: "Cache", icon: HardDrive },
     { id: "interface", label: "Interface", icon: MonitorSmartphone },
     { id: "accounts", label: "Accounts", icon: UserCircle2 },
+    { id: "parental", label: "Parental Controls", icon: Shield },
     { id: "privacy", label: "Privacy", icon: Shield },
 ];
 
@@ -198,6 +200,30 @@ export default function SettingsPage() {
                                 ))}
                             </div>
                             <Button className="mt-5 bg-white/5 border border-white/10 hover:bg-white/10" onClick={() => nav("/")} data-testid="settings-add-account">+ Add new account</Button>
+                        </Card>
+                    )}
+                    {tab === "parental" && (
+                        <Card className="bg-[#121212] border-white/10 p-6 space-y-6">
+                            <Row label="Parental PIN" desc="Set a 4-digit PIN to lock categories (leave empty to disable)">
+                                <Input 
+                                    type="password" 
+                                    maxLength={4} 
+                                    className="w-24 text-center bg-[#0a0a0a] border-white/10" 
+                                    value={settings.parental_pin || ""} 
+                                    onChange={(e) => update({ parental_pin: e.target.value })} 
+                                    placeholder="0000" 
+                                />
+                            </Row>
+                            {settings.parental_pin && (
+                                <Row label="Locked Categories" desc="Keywords to lock (e.g., 'adult, xxx, 18+')">
+                                    <Input 
+                                        value={(settings.locked_categories || []).join(", ")} 
+                                        onChange={(e) => update({ locked_categories: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                                        placeholder="e.g. xxx, adult" 
+                                        className="bg-[#0a0a0a] border-white/10 w-56"
+                                    />
+                                </Row>
+                            )}
                         </Card>
                     )}
                     {tab === "privacy" && (

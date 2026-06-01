@@ -12,11 +12,13 @@ from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Body, FastAPI, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
 import httpx
 import asyncpg
+import subliminal
+from babelfish import Language
 
 from xtream_service import (
     DEMO_CATEGORIES,
@@ -428,12 +430,12 @@ async def get_epg(stream_id: str, limit: int = 12):
 # ---------------------- Stream URL builder ---------------------- #
 
 @api.get("/content/stream-url")
-async def stream_url(content_type: str, content_id: str, ext: Optional[str] = None):
+async def stream_url(content_type: str, content_id: str, ext: Optional[str] = None, start_time: Optional[str] = None, duration: Optional[int] = None):
     pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
-        if content_type == "live":
+        if content_type == "live" or content_type == "catchup":
             for c in DEMO_LIVE_CHANNELS:
                 if c["stream_id"] == content_id:
                     return {"url": c["stream_url"]}
@@ -452,6 +454,10 @@ async def stream_url(content_type: str, content_id: str, ext: Optional[str] = No
         client = xtream_from_playlist(pl)
         if content_type == "live":
             return {"url": client.live_stream_url(content_id, ext or "m3u8")}
+        if content_type == "catchup":
+            if not start_time or not duration:
+                raise HTTPException(status_code=400, detail="start_time and duration required for catchup")
+            return {"url": client.timeshift_stream_url(content_id, start_time, duration, ext or "m3u8")}
         if content_type == "vod":
             return {"url": client.vod_stream_url(content_id, ext or "mp4")}
         if content_type == "episode":
@@ -591,8 +597,50 @@ async def delete_progress(content_type: str, content_id: str, profile_id: str = 
 
 # ---------------------- Search ---------------------- #
 
+@api.get("/content/recommendations")
+async def get_recommendations(profile_id: str = "default"):
+    pl = await get_active_playlist()
+    if not pl:
+        return []
+    if pl["type"] == "demo":
+        return DEMO_MOVIES[:5] + DEMO_SERIES[:5]
+    if pl["type"] == "xtream":
+        client = xtream_from_playlist(pl)
+        try:
+            # Just return some popular/recent VODs
+            vods = await client.streams("vod")
+            return vods[:12] if vods else []
+        except Exception:
+            return []
+    return []
+
+
+@api.get("/content/subtitles")
+async def get_subtitles(title: str, language: str = "en"):
+    try:
+        video = subliminal.Video.fromname(title)
+        subs = subliminal.download_best_subtitles([video], {Language(language)})
+        if not subs or not subs.get(video):
+            raise HTTPException(status_code=404, detail="No subtitles found")
+        sub = subs[video][0]
+        content = sub.content.decode("utf-8", errors="ignore")
+        vtt = "WEBVTT\n\n"
+        for line in content.splitlines():
+            if "-->" in line:
+                line = line.replace(",", ".")
+            vtt += line + "\n"
+        return PlainTextResponse(vtt, media_type="text/vtt", headers={"Access-Control-Allow-Origin": "*"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api.get("/content/search")
-async def search_content(q: str = Query(..., min_length=1)):
+async def search_content(q: str = Query(..., min_length=1), profile_id: str = "default"):
+    # Log search history
+    if db_pool:
+        async with db_pool.acquire() as conn:
+            await conn.execute("INSERT INTO search_history (profile_id, query) VALUES ($1, $2)", profile_id, q)
+            
     pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
@@ -619,6 +667,30 @@ async def search_content(q: str = Query(..., min_length=1)):
     return results
 
 
+@api.get("/user/searches")
+async def get_search_history(profile_id: str = "default", limit: int = 10):
+    if not db_pool:
+        return []
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT query FROM search_history WHERE profile_id = $1 ORDER BY searched_at DESC LIMIT $2", profile_id, limit)
+        # Deduplicate while preserving order
+        seen = set()
+        history = []
+        for r in rows:
+            q = r["query"]
+            if q not in seen:
+                seen.add(q)
+                history.append(q)
+        return history
+
+@api.delete("/user/searches")
+async def clear_search_history(profile_id: str = "default"):
+    if not db_pool:
+        return {"ok": False}
+    async with db_pool.acquire() as conn:
+        await conn.execute("DELETE FROM search_history WHERE profile_id = $1", profile_id)
+    return {"ok": True}
+
 # ---------------------- Settings ---------------------- #
 
 @api.get("/user/settings")
@@ -638,6 +710,8 @@ async def get_settings(profile_id: str = "default"):
                 "autoplay_next": True,
                 "preview_on_hover": True,
                 "analytics": False,
+                "parental_pin": None,
+                "locked_categories": []
             }
         return dict(row)
 
@@ -647,8 +721,8 @@ async def update_settings(settings: dict[str, Any] = Body(...)):
     pid = settings.get("profile_id", "default")
     async with db_pool.acquire() as conn:
         await conn.execute('''
-            INSERT INTO settings (profile_id, preferred_player, buffer_size, hardware_acceleration, subtitle_language, audio_language, autoplay_next, preview_on_hover, analytics)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO settings (profile_id, preferred_player, buffer_size, hardware_acceleration, subtitle_language, audio_language, autoplay_next, preview_on_hover, analytics, parental_pin, locked_categories)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (profile_id) DO UPDATE SET
                 preferred_player = EXCLUDED.preferred_player,
                 buffer_size = EXCLUDED.buffer_size,
@@ -657,8 +731,10 @@ async def update_settings(settings: dict[str, Any] = Body(...)):
                 audio_language = EXCLUDED.audio_language,
                 autoplay_next = EXCLUDED.autoplay_next,
                 preview_on_hover = EXCLUDED.preview_on_hover,
-                analytics = EXCLUDED.analytics
-        ''', pid, settings.get("preferred_player", "hls"), settings.get("buffer_size", 30), settings.get("hardware_acceleration", True), settings.get("subtitle_language", "en"), settings.get("audio_language", "en"), settings.get("autoplay_next", True), settings.get("preview_on_hover", True), settings.get("analytics", False))
+                analytics = EXCLUDED.analytics,
+                parental_pin = EXCLUDED.parental_pin,
+                locked_categories = EXCLUDED.locked_categories
+        ''', pid, settings.get("preferred_player", "hls"), settings.get("buffer_size", 30), settings.get("hardware_acceleration", True), settings.get("subtitle_language", "en"), settings.get("audio_language", "en"), settings.get("autoplay_next", True), settings.get("preview_on_hover", True), settings.get("analytics", False), settings.get("parental_pin"), settings.get("locked_categories", []))
         
         row = await conn.fetchrow("SELECT * FROM settings WHERE profile_id = $1", pid)
         return dict(row)

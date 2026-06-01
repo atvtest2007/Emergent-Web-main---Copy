@@ -32,11 +32,14 @@ export const Content = {
     series: (id) => api.get(`/content/series/${id}`).then((r) => r.data),
     epg: (streamId, limit = 12) =>
         api.get(`/content/epg/${streamId}`, { params: { limit } }).then((r) => r.data),
-    streamUrl: (contentType, contentId, ext) =>
+    streamUrl: (contentType, contentId, ext, startTime, duration) =>
         api
-            .get(`/content/stream-url`, { params: { content_type: contentType, content_id: contentId, ext } })
+            .get(`/content/stream-url`, { params: { content_type: contentType, content_id: contentId, ext, start_time: startTime, duration } })
             .then((r) => r.data),
     search: (q) => api.get(`/content/search`, { params: { q } }).then((r) => r.data),
+    searchHistory: () => api.get(`/user/searches`).then((r) => r.data),
+    clearSearchHistory: () => api.delete(`/user/searches`).then((r) => r.data),
+    recommendations: () => api.get(`/content/recommendations`).then((r) => r.data),
 };
 
 export const Favorites = {

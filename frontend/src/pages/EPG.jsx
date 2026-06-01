@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Content } from "@/lib/api";
 import { Loader2, Radio, Play } from "lucide-react";
 
@@ -13,7 +13,13 @@ function startOfHour(d = new Date()) {
     return x;
 }
 
+function formatCatchupStart(dateObj) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}:${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`;
+}
+
 export default function EPG() {
+    const nav = useNavigate();
     const [loading, setLoading] = useState(true);
     const [channels, setChannels] = useState([]);
     const [epgMap, setEpgMap] = useState({});
@@ -115,12 +121,27 @@ export default function EPG() {
                                                         const width = ((pe - ps) / (1000 * 60 * 60)) * HOUR_WIDTH - 2;
                                                         if (left + width < 0 || left > HOUR_WIDTH * totalHours) return null;
                                                         const isLive = now >= ps && now <= pe;
-                                                        const clampedLeft = Math.max(0, left);
                                                         const clampedWidth = width - Math.max(0, -left);
+                                                        const clampedLeft = Math.max(0, left);
+                                                        
+                                                        const hasArchive = p.has_archive === 1 || p.has_archive === true;
+                                                        const isPast = now > ps;
+                                                        const durationMins = Math.round((pe - ps) / 60000);
+                                                        const canCatchup = hasArchive && isPast;
+
+                                                        const onClick = () => {
+                                                            if (isLive || !canCatchup) {
+                                                                nav(`/watch/live/${c.stream_id}`);
+                                                            } else {
+                                                                nav(`/watch/catchup/${c.stream_id}?start=${formatCatchupStart(ps)}&duration=${durationMins}`);
+                                                            }
+                                                        };
+
                                                         return (
                                                             <button
                                                                 key={p.id}
-                                                                className={`epg-program absolute top-2 bottom-2 rounded border text-left px-2.5 py-1 overflow-hidden ${isLive ? "live" : "bg-white/[0.03] border-white/10"}`}
+                                                                onClick={onClick}
+                                                                className={`epg-program absolute top-2 bottom-2 rounded border text-left px-2.5 py-1 overflow-hidden transition-colors ${isLive ? "live" : "bg-white/[0.03] border-white/10 hover:bg-white/10"}`}
                                                                 style={{ left: `${clampedLeft}px`, width: `${Math.max(80, clampedWidth)}px` }}
                                                                 title={`${p.title}\n${p.description}`}
                                                                 data-testid={`program-${p.id}`}

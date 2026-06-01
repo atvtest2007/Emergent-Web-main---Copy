@@ -3,6 +3,7 @@ import { Content } from "@/lib/api";
 import ChannelCard from "@/components/ChannelCard";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search } from "lucide-react";
+import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function LiveTV() {
     const [loading, setLoading] = useState(true);
@@ -10,6 +11,7 @@ export default function LiveTV() {
     const [categories, setCategories] = useState([]);
     const [cat, setCat] = useState("all");
     const [q, setQ] = useState("");
+    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
 
     useEffect(() => {
         (async () => {
@@ -88,9 +90,17 @@ export default function LiveTV() {
                 <div className="text-center py-20 text-zinc-400">No channels match your filters.</div>
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filtered.map((c) => <ChannelCard key={c.stream_id} channel={c} />)}
+                    {filtered.map((c) => (
+                        <ChannelCard 
+                            key={c.stream_id} 
+                            channel={c} 
+                            isLocked={isCategoryLocked(c.category_name)}
+                            onUnlock={unlock}
+                        />
+                    ))}
                 </div>
             )}
+            {renderModal()}
         </div>
     );
 }

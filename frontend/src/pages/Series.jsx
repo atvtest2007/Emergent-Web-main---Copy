@@ -3,6 +3,7 @@ import { Content } from "@/lib/api";
 import PosterCard from "@/components/PosterCard";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search, Clapperboard } from "lucide-react";
+import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function Series() {
     const [loading, setLoading] = useState(true);
@@ -10,6 +11,7 @@ export default function Series() {
     const [cats, setCats] = useState([]);
     const [cat, setCat] = useState("all");
     const [q, setQ] = useState("");
+    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
 
     useEffect(() => {
         (async () => {
@@ -70,9 +72,18 @@ export default function Series() {
                 <div className="text-center py-20 text-zinc-400">No series found.</div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {filtered.map((it) => <PosterCard key={it.series_id || it.stream_id} item={it} type="series" />)}
+                    {filtered.map((it) => (
+                        <PosterCard 
+                            key={it.series_id || it.stream_id} 
+                            item={it} 
+                            type="series" 
+                            isLocked={isCategoryLocked(it.category_name)}
+                            onUnlock={unlock}
+                        />
+                    ))}
                 </div>
             )}
+            {renderModal()}
         </div>
     );
 }

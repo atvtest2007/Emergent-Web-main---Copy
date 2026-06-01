@@ -605,3 +605,6 @@ class XtreamClient:
 
     def series_stream_url(self, episode_id: Any, ext: str = "mp4") -> str:
         return f"{self.server}/series/{self.username}/{self.password}/{episode_id}.{ext}"
+
+    def timeshift_stream_url(self, stream_id: Any, start_time: str, duration: int, ext: str = "m3u8") -> str:
+        return f"{self.server}/timeshift/{self.username}/{self.password}/{duration}/{start_time}/{stream_id}.{ext}"
