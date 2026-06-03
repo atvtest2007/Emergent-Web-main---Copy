@@ -63,6 +63,7 @@ export default function Watch() {
                 setLoading(false);
             }
         })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [type, id, apiType, isLive]);
 
     const onProgress = (pos, dur) => {

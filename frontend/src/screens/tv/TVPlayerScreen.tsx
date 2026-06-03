@@ -103,6 +103,7 @@ export default function TVPlayerScreen() {
         })();
 
         return () => { active = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src, isLive, loading, initialPos]); // Add loading and initialPos dependencies
 
     if (loading || !src || Capacitor.isNativePlatform()) {
