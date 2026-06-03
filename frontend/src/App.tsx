@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import "./index.css";
-import { BrowserRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Capacitor } from '@capacitor/core';
 
@@ -104,7 +104,7 @@ const TVApp = () => {
 
 const WebApp = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
         <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/home" element={<WebShell><Home /></WebShell>} />
@@ -122,7 +122,7 @@ const WebApp = () => {
             <Route path="/watch/:type/:id" element={<Watch />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
