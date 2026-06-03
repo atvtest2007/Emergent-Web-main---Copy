@@ -44,7 +44,6 @@ export default function ChannelCard({ channel, isLocked, onUnlock }) {
                         <div className="text-xs text-zinc-400 mt-0.5 line-clamp-1">{channel.now_playing}</div>
                     )}
                 </div>
-                </div>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="w-10 h-10 rounded-full bg-[#E50914] flex items-center justify-center shadow-lg shadow-red-900/40">
                         {isLocked ? <Lock className="w-4 h-4 text-white" /> : <Play className="w-5 h-5 fill-white text-white ml-0.5" />}
