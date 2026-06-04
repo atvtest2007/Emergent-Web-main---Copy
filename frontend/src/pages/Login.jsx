@@ -185,7 +185,7 @@ export default function Login() {
                         <Card className="glass-strong border-white/10 p-6 lg:p-8 animate-fade-up" data-testid="login-card">
                             <div className="mb-6">
                                 <div className="text-xs tracking-[0.3em] uppercase text-zinc-400 font-bold mb-2">Connect Playlist</div>
-                                <h2 className="font-display text-3xl font-bold tracking-tight">Sign in to Maxx</h2>
+                                <h2 className="font-display text-3xl font-bold tracking-tight">Add a Playlist</h2>
                             </div>
 
                             <Tabs value={tab} onValueChange={setTab}>

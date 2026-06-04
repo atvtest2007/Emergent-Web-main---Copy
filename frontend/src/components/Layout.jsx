@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 import {
     Home, Tv, Film, Clapperboard, Library, Heart, History,
     Search, Settings as SettingsIcon, LogOut, Compass, Radio,
@@ -21,6 +22,7 @@ const NAV = [
 export default function Layout({ children }) {
     const location = useLocation();
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     return (
         <div className="min-h-screen flex bg-[#050505] text-zinc-100" data-testid="app-shell">
@@ -58,15 +60,25 @@ export default function Layout({ children }) {
                     })}
                 </nav>
 
-                <div className="px-3 py-4 border-t border-white/5">
+                <div className="px-3 py-4 border-t border-white/5 space-y-1">
                     <button
-                        data-testid="nav-switch-account"
+                        data-testid="nav-switch-playlist"
                         onClick={() => navigate("/")}
                         className="sidebar-link flex items-center gap-4 px-3 py-3 rounded-md text-sm text-zinc-400 hover:text-white w-full"
                     >
+                        <SettingsIcon className="w-5 h-5 shrink-0" />
+                        <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                            Playlists
+                        </span>
+                    </button>
+                    <button
+                        data-testid="nav-logout"
+                        onClick={() => { logout(); navigate("/account/login"); }}
+                        className="sidebar-link flex items-center gap-4 px-3 py-3 rounded-md text-sm text-[#E50914] hover:bg-[#E50914]/10 w-full"
+                    >
                         <LogOut className="w-5 h-5 shrink-0" />
                         <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                            Switch Account
+                            Log out
                         </span>
                     </button>
                 </div>

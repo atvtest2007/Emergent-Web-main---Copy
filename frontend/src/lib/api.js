@@ -8,7 +8,20 @@ export const api = axios.create({
     timeout: 30000,
 });
 
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("maxx.auth_token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 // Helpers ---------------
+export const Auth = {
+    login: (username, password) => api.post("/auth/login", { username, password }).then(r => r.data),
+    register: (username, password) => api.post("/auth/register", { username, password }).then(r => r.data),
+    me: () => api.get("/auth/me").then(r => r.data),
+};
 export const Playlists = {
     create: (payload) => api.post("/playlists", payload).then((r) => r.data),
     list: () => api.get("/playlists").then((r) => r.data),

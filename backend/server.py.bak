@@ -11,7 +11,7 @@ from typing import Any, Optional
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Body, FastAPI, HTTPException, Query, Depends
+from fastapi import APIRouter, Body, FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
@@ -30,8 +30,6 @@ from xtream_service import (
     demo_epg,
     parse_m3u,
 )
-
-from auth import router as auth_router, get_current_user_id
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -58,7 +56,6 @@ async def lifespan(app: FastAPI):
     db_url = os.environ.get("DATABASE_URL")
     if db_url:
         db_pool = await asyncpg.create_pool(db_url, init=init_connection)
-        app.state.db_pool = db_pool
     else:
         logging.warning("DATABASE_URL is not set!")
     yield
@@ -101,12 +98,14 @@ class PlaylistCreate(BaseModel):
 
 
 class FavoriteCreate(BaseModel):
+    profile_id: str = "default"
     content_type: str  # live | movie | series | vod
     content_id: str
     content_data: dict[str, Any] = Field(default_factory=dict)
 
 
 class ProgressUpdate(BaseModel):
+    profile_id: str = "default"
     content_type: str
     content_id: str
     position: float
@@ -116,30 +115,28 @@ class ProgressUpdate(BaseModel):
 
 # ---------------------- Helpers ---------------------- #
 
-async def get_active_playlist(user_id: str) -> dict[str, Any] | None:
+async def get_active_playlist() -> dict[str, Any] | None:
     if not db_pool:
         return None
     async with db_pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT * FROM playlists WHERE is_active = true AND user_id = $1::uuid LIMIT 1", user_id)
+        row = await conn.fetchrow("SELECT * FROM playlists WHERE is_active = true LIMIT 1")
         if row:
             d = dict(row)
             d["id"] = str(d["id"])
-            d["user_id"] = str(d["user_id"])
             if d.get("created_at"):
                 d["created_at"] = d["created_at"].isoformat()
             return d
     return None
 
-async def get_playlist(playlist_id: str, user_id: str) -> dict[str, Any]:
+async def get_playlist(playlist_id: str) -> dict[str, Any]:
     if not db_pool:
         raise HTTPException(status_code=500, detail="DB not initialized")
     async with db_pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT * FROM playlists WHERE id = $1::uuid AND user_id = $2::uuid", playlist_id, user_id)
+        row = await conn.fetchrow("SELECT * FROM playlists WHERE id = $1::uuid", playlist_id)
         if not row:
             raise HTTPException(status_code=404, detail="Playlist not found")
         d = dict(row)
         d["id"] = str(d["id"])
-        d["user_id"] = str(d["user_id"])
         if d.get("created_at"):
             d["created_at"] = d["created_at"].isoformat()
         return d
@@ -161,7 +158,7 @@ async def root():
 # ---------------------- Playlist management ---------------------- #
 
 @api.post("/playlists")
-async def create_playlist(payload: PlaylistCreate, user_id: str = Depends(get_current_user_id)):
+async def create_playlist(payload: PlaylistCreate):
     pl = Playlist(**payload.model_dump())
     doc = pl.model_dump()
     
@@ -191,27 +188,26 @@ async def create_playlist(payload: PlaylistCreate, user_id: str = Depends(get_cu
     
     async with db_pool.acquire() as conn:
         async with conn.transaction():
-            await conn.execute("UPDATE playlists SET is_active = false WHERE user_id = $1::uuid", user_id)
+            await conn.execute("UPDATE playlists SET is_active = false")
             doc["is_active"] = True
             await conn.execute('''
-                INSERT INTO playlists (id, user_id, name, type, server_url, username, password, m3u_url, m3u_content, is_active, auto_connect)
-                VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ''', doc["id"], user_id, doc["name"], doc["type"], doc.get("server_url"), doc.get("username"), doc.get("password"), doc.get("m3u_url"), doc.get("m3u_content"), doc["is_active"], doc["auto_connect"])
+                INSERT INTO playlists (id, name, type, server_url, username, password, m3u_url, m3u_content, is_active, auto_connect)
+                VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ''', doc["id"], doc["name"], doc["type"], doc.get("server_url"), doc.get("username"), doc.get("password"), doc.get("m3u_url"), doc.get("m3u_content"), doc["is_active"], doc["auto_connect"])
             
     return doc
 
 
 @api.get("/playlists")
-async def list_playlists(user_id: str = Depends(get_current_user_id)):
+async def list_playlists():
     if not db_pool:
         return []
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("SELECT * FROM playlists WHERE user_id = $1::uuid ORDER BY created_at DESC", user_id)
+        rows = await conn.fetch("SELECT * FROM playlists ORDER BY created_at DESC")
         docs = []
         for r in rows:
             d = dict(r)
             d["id"] = str(d["id"])
-            d["user_id"] = str(d["user_id"])
             if d.get("created_at"):
                 d["created_at"] = d["created_at"].isoformat()
             if d.get("password"):
@@ -221,24 +217,24 @@ async def list_playlists(user_id: str = Depends(get_current_user_id)):
 
 
 @api.get("/playlists/active")
-async def get_active_playlist_endpoint(user_id: str = Depends(get_current_user_id)):
-    return await get_active_playlist(user_id)
+async def get_active_playlist_endpoint():
+    return await get_active_playlist()
 
 
 @api.post("/playlists/{playlist_id}/activate")
-async def activate_playlist(playlist_id: str, user_id: str = Depends(get_current_user_id)):
-    pl = await get_playlist(playlist_id, user_id)
+async def activate_playlist(playlist_id: str):
+    pl = await get_playlist(playlist_id)
     async with db_pool.acquire() as conn:
         async with conn.transaction():
-            await conn.execute("UPDATE playlists SET is_active = false WHERE user_id = $1::uuid", user_id)
-            await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid AND user_id = $2::uuid", playlist_id, user_id)
+            await conn.execute("UPDATE playlists SET is_active = false")
+            await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid", playlist_id)
     return {"ok": True, "active": pl["id"]}
 
 
 @api.delete("/playlists/{playlist_id}")
-async def delete_playlist(playlist_id: str, user_id: str = Depends(get_current_user_id)):
+async def delete_playlist(playlist_id: str):
     async with db_pool.acquire() as conn:
-        res = await conn.execute("DELETE FROM playlists WHERE id = $1::uuid AND user_id = $2::uuid", playlist_id, user_id)
+        res = await conn.execute("DELETE FROM playlists WHERE id = $1::uuid", playlist_id)
         if res == "DELETE 0":
             raise HTTPException(status_code=404, detail="Playlist not found")
     return {"ok": True}
@@ -247,17 +243,16 @@ async def delete_playlist(playlist_id: str, user_id: str = Depends(get_current_u
 # ---------------------- Demo seed ---------------------- #
 
 @api.post("/playlists/demo")
-async def create_demo_playlist(user_id: str = Depends(get_current_user_id)):
+async def create_demo_playlist():
     async with db_pool.acquire() as conn:
-        existing = await conn.fetchrow("SELECT * FROM playlists WHERE type = 'demo' AND user_id = $1::uuid LIMIT 1", user_id)
+        existing = await conn.fetchrow("SELECT * FROM playlists WHERE type = 'demo' LIMIT 1")
         if existing:
             eid = str(existing["id"])
             async with conn.transaction():
-                await conn.execute("UPDATE playlists SET is_active = false WHERE user_id = $1::uuid", user_id)
-                await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid AND user_id = $2::uuid", eid, user_id)
+                await conn.execute("UPDATE playlists SET is_active = false")
+                await conn.execute("UPDATE playlists SET is_active = true WHERE id = $1::uuid", eid)
             d = dict(existing)
             d["id"] = eid
-            d["user_id"] = str(d["user_id"])
             d["is_active"] = True
             if d.get("created_at"):
                 d["created_at"] = d["created_at"].isoformat()
@@ -266,19 +261,19 @@ async def create_demo_playlist(user_id: str = Depends(get_current_user_id)):
         pl = Playlist(name="Maxx Demo Library", type="demo", is_active=True)
         doc = pl.model_dump()
         async with conn.transaction():
-            await conn.execute("UPDATE playlists SET is_active = false WHERE user_id = $1::uuid", user_id)
+            await conn.execute("UPDATE playlists SET is_active = false")
             await conn.execute('''
-                INSERT INTO playlists (id, user_id, name, type, is_active)
-                VALUES ($1::uuid, $2::uuid, $3, $4, $5)
-            ''', doc["id"], user_id, doc["name"], doc["type"], True)
+                INSERT INTO playlists (id, name, type, is_active)
+                VALUES ($1::uuid, $2, $3, $4)
+            ''', doc["id"], doc["name"], doc["type"], True)
         return doc
 
 
 # ---------------------- Account info ---------------------- #
 
 @api.get("/account/info")
-async def account_info(user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def account_info():
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -308,10 +303,10 @@ def _filter_demo_by_category(items: list[dict[str, Any]], category_id: Optional[
 
 
 @api.get("/content/categories/{content_type}")
-async def get_categories(content_type: str, user_id: str = Depends(get_current_user_id)):
+async def get_categories(content_type: str):
     if content_type not in ("live", "vod", "series"):
         raise HTTPException(status_code=400, detail="Invalid content type")
-    pl = await get_active_playlist(user_id)
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -332,10 +327,10 @@ async def get_categories(content_type: str, user_id: str = Depends(get_current_u
 
 
 @api.get("/content/streams/{content_type}")
-async def get_streams(content_type: str, category_id: Optional[str] = None, user_id: str = Depends(get_current_user_id)):
+async def get_streams(content_type: str, category_id: Optional[str] = None):
     if content_type not in ("live", "vod", "series"):
         raise HTTPException(status_code=400, detail="Invalid content type")
-    pl = await get_active_playlist(user_id)
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -368,8 +363,8 @@ async def get_streams(content_type: str, category_id: Optional[str] = None, user
 # ---------------------- Details ---------------------- #
 
 @api.get("/content/movie/{movie_id}")
-async def get_movie_details(movie_id: str, user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def get_movie_details(movie_id: str):
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -386,8 +381,8 @@ async def get_movie_details(movie_id: str, user_id: str = Depends(get_current_us
 
 
 @api.get("/content/series/{series_id}")
-async def get_series_details(series_id: str, user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def get_series_details(series_id: str):
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -417,8 +412,8 @@ async def get_series_details(series_id: str, user_id: str = Depends(get_current_
 # ---------------------- EPG ---------------------- #
 
 @api.get("/content/epg/{stream_id}")
-async def get_epg(stream_id: str, limit: int = 12, user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def get_epg(stream_id: str, limit: int = 12):
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -435,8 +430,8 @@ async def get_epg(stream_id: str, limit: int = 12, user_id: str = Depends(get_cu
 # ---------------------- Stream URL builder ---------------------- #
 
 @api.get("/content/stream-url")
-async def stream_url(content_type: str, content_id: str, ext: Optional[str] = None, start_time: Optional[str] = None, duration: Optional[int] = None, user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def stream_url(content_type: str, content_id: str, ext: Optional[str] = None, start_time: Optional[str] = None, duration: Optional[int] = None):
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     if pl["type"] == "demo":
@@ -504,16 +499,15 @@ async def proxy_stream(url: str = Query(...)):
 # ---------------------- Favorites ---------------------- #
 
 @api.get("/user/favorites")
-async def list_favorites(user_id: str = Depends(get_current_user_id)):
+async def list_favorites(profile_id: str = "default"):
     if not db_pool:
         return []
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("SELECT * FROM favorites WHERE user_id = $1::uuid ORDER BY added_at DESC LIMIT 500", user_id)
+        rows = await conn.fetch("SELECT * FROM favorites WHERE profile_id = $1 ORDER BY added_at DESC LIMIT 500", profile_id)
         docs = []
         for r in rows:
             d = dict(r)
             d["id"] = str(d["id"])
-            d["user_id"] = str(d["user_id"])
             if d.get("added_at"):
                 d["added_at"] = d["added_at"].isoformat()
             docs.append(d)
@@ -521,59 +515,57 @@ async def list_favorites(user_id: str = Depends(get_current_user_id)):
 
 
 @api.post("/user/favorites")
-async def add_favorite(payload: FavoriteCreate, user_id: str = Depends(get_current_user_id)):
+async def add_favorite(payload: FavoriteCreate):
     async with db_pool.acquire() as conn:
         row = await conn.fetchrow('''
-            INSERT INTO favorites (user_id, content_type, content_id, content_data)
-            VALUES ($1::uuid, $2, $3, $4)
-            ON CONFLICT (user_id, content_type, content_id) DO UPDATE SET added_at = now()
+            INSERT INTO favorites (profile_id, content_type, content_id, content_data)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (profile_id, content_type, content_id) DO UPDATE SET added_at = now()
             RETURNING *
-        ''', user_id, payload.content_type, payload.content_id, payload.content_data)
+        ''', payload.profile_id, payload.content_type, payload.content_id, payload.content_data)
         d = dict(row)
         d["id"] = str(d["id"])
-        d["user_id"] = str(d["user_id"])
         if d.get("added_at"):
             d["added_at"] = d["added_at"].isoformat()
         return d
 
 
 @api.delete("/user/favorites/{content_type}/{content_id}")
-async def remove_favorite(content_type: str, content_id: str, user_id: str = Depends(get_current_user_id)):
+async def remove_favorite(content_type: str, content_id: str, profile_id: str = "default"):
     async with db_pool.acquire() as conn:
-        await conn.execute("DELETE FROM favorites WHERE user_id = $1::uuid AND content_type = $2 AND content_id = $3", user_id, content_type, content_id)
+        await conn.execute("DELETE FROM favorites WHERE profile_id = $1 AND content_type = $2 AND content_id = $3", profile_id, content_type, content_id)
     return {"ok": True}
 
 
 # ---------------------- Watch progress / Continue Watching ---------------------- #
 
 @api.post("/user/progress")
-async def upsert_progress(payload: ProgressUpdate, user_id: str = Depends(get_current_user_id)):
+async def upsert_progress(payload: ProgressUpdate):
     progress = (payload.position / payload.duration) if payload.duration else 0
     async with db_pool.acquire() as conn:
         await conn.execute('''
-            INSERT INTO watch_progress (user_id, content_type, content_id, position, duration, progress, content_data)
-            VALUES ($1::uuid, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (user_id, content_type, content_id) DO UPDATE SET 
+            INSERT INTO watch_progress (profile_id, content_type, content_id, position, duration, progress, content_data)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (profile_id, content_type, content_id) DO UPDATE SET 
                 position = EXCLUDED.position,
                 duration = EXCLUDED.duration,
                 progress = EXCLUDED.progress,
                 content_data = EXCLUDED.content_data,
                 last_watched_at = now()
-        ''', user_id, payload.content_type, payload.content_id, payload.position, payload.duration, progress, payload.content_data)
+        ''', payload.profile_id, payload.content_type, payload.content_id, payload.position, payload.duration, progress, payload.content_data)
     return {"ok": True}
 
 
 @api.get("/user/progress")
-async def list_progress(user_id: str = Depends(get_current_user_id)):
+async def list_progress(profile_id: str = "default"):
     if not db_pool:
         return []
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("SELECT * FROM watch_progress WHERE user_id = $1::uuid ORDER BY last_watched_at DESC LIMIT 200", user_id)
+        rows = await conn.fetch("SELECT * FROM watch_progress WHERE profile_id = $1 ORDER BY last_watched_at DESC LIMIT 200", profile_id)
         docs = []
         for r in rows:
             d = dict(r)
             d["id"] = str(d["id"])
-            d["user_id"] = str(d["user_id"])
             if d.get("last_watched_at"):
                 d["last_watched_at"] = d["last_watched_at"].isoformat()
             docs.append(d)
@@ -581,16 +573,15 @@ async def list_progress(user_id: str = Depends(get_current_user_id)):
 
 
 @api.get("/user/continue-watching")
-async def continue_watching(user_id: str = Depends(get_current_user_id)):
+async def continue_watching(profile_id: str = "default"):
     if not db_pool:
         return []
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("SELECT * FROM watch_progress WHERE user_id = $1::uuid AND progress > 0.02 AND progress < 0.95 ORDER BY last_watched_at DESC LIMIT 50", user_id)
+        rows = await conn.fetch("SELECT * FROM watch_progress WHERE profile_id = $1 AND progress > 0.02 AND progress < 0.95 ORDER BY last_watched_at DESC LIMIT 50", profile_id)
         docs = []
         for r in rows:
             d = dict(r)
             d["id"] = str(d["id"])
-            d["user_id"] = str(d["user_id"])
             if d.get("last_watched_at"):
                 d["last_watched_at"] = d["last_watched_at"].isoformat()
             docs.append(d)
@@ -598,17 +589,17 @@ async def continue_watching(user_id: str = Depends(get_current_user_id)):
 
 
 @api.delete("/user/progress/{content_type}/{content_id}")
-async def delete_progress(content_type: str, content_id: str, user_id: str = Depends(get_current_user_id)):
+async def delete_progress(content_type: str, content_id: str, profile_id: str = "default"):
     async with db_pool.acquire() as conn:
-        await conn.execute("DELETE FROM watch_progress WHERE user_id = $1::uuid AND content_type = $2 AND content_id = $3", user_id, content_type, content_id)
+        await conn.execute("DELETE FROM watch_progress WHERE profile_id = $1 AND content_type = $2 AND content_id = $3", profile_id, content_type, content_id)
     return {"ok": True}
 
 
 # ---------------------- Search ---------------------- #
 
 @api.get("/content/recommendations")
-async def get_recommendations(user_id: str = Depends(get_current_user_id)):
-    pl = await get_active_playlist(user_id)
+async def get_recommendations(profile_id: str = "default"):
+    pl = await get_active_playlist()
     if not pl:
         return []
     if pl["type"] == "demo":
@@ -644,13 +635,13 @@ async def get_subtitles(title: str, language: str = "en"):
 
 
 @api.get("/content/search")
-async def search_content(q: str = Query(..., min_length=1), user_id: str = Depends(get_current_user_id)):
+async def search_content(q: str = Query(..., min_length=1), profile_id: str = "default"):
     # Log search history
     if db_pool:
         async with db_pool.acquire() as conn:
-            await conn.execute("INSERT INTO search_history (user_id, query) VALUES ($1::uuid, $2)", user_id, q)
+            await conn.execute("INSERT INTO search_history (profile_id, query) VALUES ($1, $2)", profile_id, q)
             
-    pl = await get_active_playlist(user_id)
+    pl = await get_active_playlist()
     if not pl:
         raise HTTPException(status_code=404, detail="No active playlist")
     q_lower = q.lower()
@@ -677,11 +668,11 @@ async def search_content(q: str = Query(..., min_length=1), user_id: str = Depen
 
 
 @api.get("/user/searches")
-async def get_search_history(limit: int = 10, user_id: str = Depends(get_current_user_id)):
+async def get_search_history(profile_id: str = "default", limit: int = 10):
     if not db_pool:
         return []
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("SELECT query FROM search_history WHERE user_id = $1::uuid ORDER BY searched_at DESC LIMIT $2", user_id, limit)
+        rows = await conn.fetch("SELECT query FROM search_history WHERE profile_id = $1 ORDER BY searched_at DESC LIMIT $2", profile_id, limit)
         # Deduplicate while preserving order
         seen = set()
         history = []
@@ -693,24 +684,24 @@ async def get_search_history(limit: int = 10, user_id: str = Depends(get_current
         return history
 
 @api.delete("/user/searches")
-async def clear_search_history(user_id: str = Depends(get_current_user_id)):
+async def clear_search_history(profile_id: str = "default"):
     if not db_pool:
         return {"ok": False}
     async with db_pool.acquire() as conn:
-        await conn.execute("DELETE FROM search_history WHERE user_id = $1::uuid", user_id)
+        await conn.execute("DELETE FROM search_history WHERE profile_id = $1", profile_id)
     return {"ok": True}
 
 # ---------------------- Settings ---------------------- #
 
 @api.get("/user/settings")
-async def get_settings(user_id: str = Depends(get_current_user_id)):
+async def get_settings(profile_id: str = "default"):
     if not db_pool:
         return {}
     async with db_pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT * FROM settings WHERE user_id = $1::uuid", user_id)
+        row = await conn.fetchrow("SELECT * FROM settings WHERE profile_id = $1", profile_id)
         if not row:
             return {
-                "user_id": user_id,
+                "profile_id": profile_id,
                 "preferred_player": "hls",
                 "buffer_size": 30,
                 "hardware_acceleration": True,
@@ -722,18 +713,17 @@ async def get_settings(user_id: str = Depends(get_current_user_id)):
                 "parental_pin": None,
                 "locked_categories": []
             }
-        d = dict(row)
-        d["user_id"] = str(d["user_id"])
-        return d
+        return dict(row)
 
 
 @api.put("/user/settings")
-async def update_settings(settings: dict[str, Any] = Body(...), user_id: str = Depends(get_current_user_id)):
+async def update_settings(settings: dict[str, Any] = Body(...)):
+    pid = settings.get("profile_id", "default")
     async with db_pool.acquire() as conn:
         await conn.execute('''
-            INSERT INTO settings (user_id, preferred_player, buffer_size, hardware_acceleration, subtitle_language, audio_language, autoplay_next, preview_on_hover, analytics, parental_pin, locked_categories)
-            VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (user_id) DO UPDATE SET
+            INSERT INTO settings (profile_id, preferred_player, buffer_size, hardware_acceleration, subtitle_language, audio_language, autoplay_next, preview_on_hover, analytics, parental_pin, locked_categories)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (profile_id) DO UPDATE SET
                 preferred_player = EXCLUDED.preferred_player,
                 buffer_size = EXCLUDED.buffer_size,
                 hardware_acceleration = EXCLUDED.hardware_acceleration,
@@ -744,17 +734,14 @@ async def update_settings(settings: dict[str, Any] = Body(...), user_id: str = D
                 analytics = EXCLUDED.analytics,
                 parental_pin = EXCLUDED.parental_pin,
                 locked_categories = EXCLUDED.locked_categories
-        ''', user_id, settings.get("preferred_player", "hls"), settings.get("buffer_size", 30), settings.get("hardware_acceleration", True), settings.get("subtitle_language", "en"), settings.get("audio_language", "en"), settings.get("autoplay_next", True), settings.get("preview_on_hover", True), settings.get("analytics", False), settings.get("parental_pin"), settings.get("locked_categories", []))
+        ''', pid, settings.get("preferred_player", "hls"), settings.get("buffer_size", 30), settings.get("hardware_acceleration", True), settings.get("subtitle_language", "en"), settings.get("audio_language", "en"), settings.get("autoplay_next", True), settings.get("preview_on_hover", True), settings.get("analytics", False), settings.get("parental_pin"), settings.get("locked_categories", []))
         
-        row = await conn.fetchrow("SELECT * FROM settings WHERE user_id = $1::uuid", user_id)
-        d = dict(row)
-        d["user_id"] = str(d["user_id"])
-        return d
+        row = await conn.fetchrow("SELECT * FROM settings WHERE profile_id = $1", pid)
+        return dict(row)
 
 
 # ---------------------- Mount ---------------------- #
 
-app.include_router(auth_router, prefix="/api")
 app.include_router(api)
 
 app.add_middleware(
