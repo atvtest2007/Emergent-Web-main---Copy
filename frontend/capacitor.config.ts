@@ -6,7 +6,12 @@ const config: CapacitorConfig = {
   webDir: 'build',
   server: {
     cleartext: true
-  }
+  },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;
