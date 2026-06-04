@@ -180,3 +180,26 @@ input[type="range"].player-range::-moz-range-thumb {
 [data-debug-wrapper="true"] {
     display: contents !important;
 }
+
+/* macOS Specific Overrides */
+.mac-titlebar {
+    -webkit-app-region: drag;
+    height: 38px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    pointer-events: none; /* Let clicks pass through to underlying elements except for drag */
+}
+
+/* Add padding to sidebar and main content if on Mac to avoid traffic lights */
+.mac-os .sidebar-logo-container {
+    padding-top: 42px !important;
+}
+
+/* Ensure no-drag regions */
+.no-drag {
+    -webkit-app-region: no-drag;
+    pointer-events: auto;
+}

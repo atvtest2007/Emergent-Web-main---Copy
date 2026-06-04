@@ -31,7 +31,7 @@ export default function Layout({ children }) {
                 className="hidden md:flex group fixed left-0 top-0 bottom-0 z-40 w-20 hover:w-64 flex-col glass-strong border-r border-white/5 transition-[width] duration-300 overflow-hidden"
                 data-testid="sidebar"
             >
-                <div className="flex items-center gap-3 px-5 py-6">
+                <div className="flex items-center gap-3 px-5 py-6 sidebar-logo-container">
                     <div className="w-9 h-9 rounded-md bg-gradient-to-br from-[#E50914] to-[#7a040a] flex items-center justify-center shadow-lg shadow-red-900/40 shrink-0">
                         <span className="font-display font-black text-white text-lg">M</span>
                     </div>

@@ -177,13 +177,22 @@ export default function App() {
       }
       return 'web';
     };
-    
     setPlatform(detectPlatform());
+    
+    // Check if we are running in macOS Electron via the preload script
+    // @ts-ignore
+    if (window.electron && window.electron.platform === 'darwin') {
+      document.body.classList.add('mac-os');
+    }
   }, []);
 
   return (
     <AuthProvider>
         <div className="App">
+            {/* @ts-ignore */}
+            {window.electron && window.electron.platform === 'darwin' && (
+                <div className="mac-titlebar" />
+            )}
             <Toaster
                 theme="dark"
                 position="bottom-right"

@@ -66,7 +66,7 @@ export default function AccountRegister() {
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
-                    <button onClick={() => navigate('/login')} className="text-primary hover:underline">
+                    <button onClick={() => navigate('/account/login')} className="text-primary hover:underline">
                         Sign in
                     </button>
                 </div>
