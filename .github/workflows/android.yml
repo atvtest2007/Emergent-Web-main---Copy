@@ -1,0 +1,68 @@
+name: Build Android APKs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Mobile and TV APKs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: yarn install
+
+      - name: Build Web App
+        working-directory: frontend
+        run: yarn build
+        env:
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL || 'https://your-cloud-backend.com' }}
+
+      - name: Sync Capacitor
+        working-directory: frontend
+        run: npx cap sync android
+
+      - name: Build Mobile APK (Debug)
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleMobileDebug
+
+      - name: Build TV APK (Debug)
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleTvDebug
+
+      - name: Upload Mobile APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaxxPlayer-Mobile
+          path: frontend/android/app/build/outputs/apk/mobile/debug/app-mobile-debug.apk
+
+      - name: Upload TV APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaxxPlayer-TV
+          path: frontend/android/app/build/outputs/apk/tv/debug/app-tv-debug.apk
