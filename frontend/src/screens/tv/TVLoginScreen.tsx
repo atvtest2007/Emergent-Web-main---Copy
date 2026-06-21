@@ -115,7 +115,7 @@ export default function TVLoginScreen() {
           <div className="flex items-center justify-center rounded-3xl"
             style={{
               width: 96, height: 96,
-              background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)',
+              background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)',
               boxShadow: '0 0 50px rgba(229,9,20,0.5), 0 16px 40px rgba(0,0,0,0.4)',
             }}>
             <svg width="52" height="52" viewBox="0 0 48 48" fill="none">
@@ -125,14 +125,14 @@ export default function TVLoginScreen() {
           </div>
           <div className="text-center">
             <h1 className="text-4xl font-black" style={{ color: '#f8fafc', letterSpacing: '-0.5px' }}>
-              Maxx<span style={{ color: '#E50914' }}>Player</span>
+              Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
             </h1>
             <p className="text-sm mt-1 font-medium" style={{ color: '#475569' }}>Stream Everything</p>
           </div>
           <div className="flex flex-col gap-2 mt-4 w-full px-8">
             {['4K HDR Streaming', 'Live TV & EPG', 'Movies & Series', 'Catch Up TV'].map((feat) => (
               <div key={feat} className="flex items-center gap-3 px-4 py-2 rounded-xl" style={{ background: 'rgba(229,9,20,0.06)', border: '1px solid rgba(229,9,20,0.1)' }}>
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#E50914' }} />
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--brand-primary)' }} />
                 <span className="text-sm font-medium" style={{ color: '#64748b' }}>{feat}</span>
               </div>
             ))}
@@ -152,7 +152,7 @@ export default function TVLoginScreen() {
               <button tabIndex={0} key={t.id} onClick={() => setTab(t.id)}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
                 style={{
-                  background: tab === t.id ? 'linear-gradient(135deg, #E50914, #B80710)' : 'transparent',
+                  background: tab === t.id ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : 'transparent',
                   color: tab === t.id ? '#fff' : '#475569',
                   boxShadow: tab === t.id ? '0 4px 14px rgba(229,9,20,0.35)' : 'none',
                 }}>
@@ -186,9 +186,9 @@ export default function TVLoginScreen() {
               <div className="flex gap-6 items-center">
                 <div className="flex flex-col items-center justify-center rounded-2xl flex-shrink-0 gap-3 p-6"
                   style={{ width: 160, background: 'rgba(229,9,20,0.06)', border: '1px solid rgba(229,9,20,0.15)' }}>
-                  <Tv2 size={36} style={{ color: '#E50914' }} />
+                  <Tv2 size={36} style={{ color: 'var(--brand-primary)' }} />
                   <p className="text-xs font-semibold text-center" style={{ color: '#475569' }}>
-                    Visit<br /><span style={{ color: '#E50914' }}>my.maxxplayer.com</span><br />to get your code
+                    Visit<br /><span style={{ color: 'var(--brand-primary)' }}>my.maxxplayer.com</span><br />to get your code
                   </p>
                 </div>
                 <div className="flex-1">
@@ -203,7 +203,7 @@ export default function TVLoginScreen() {
             <button tabIndex={0} onClick={handleSubmit}
               disabled={loading}
               className="flex-1 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 group focus:outline-none"
-              style={{ background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)', color: '#fff', boxShadow: '0 8px 28px rgba(229,9,20,0.4)' }}>
+              style={{ background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)', color: '#fff', boxShadow: '0 8px 28px rgba(229,9,20,0.4)' }}>
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <>
                   {tab === 'activation' ? 'Activate Device' : 'Connect & Stream'}
@@ -212,7 +212,7 @@ export default function TVLoginScreen() {
               )}
             </button>
             <button tabIndex={0} className="px-6 py-3.5 rounded-2xl font-semibold text-sm group focus:outline-none"
-              style={{ border: '1px solid rgba(229,9,20,0.25)', color: '#E50914', background: 'rgba(229,9,20,0.05)' }}>
+              style={{ border: '1px solid rgba(229,9,20,0.25)', color: 'var(--brand-primary)', background: 'rgba(229,9,20,0.05)' }}>
               Register
             </button>
           </div>
@@ -228,7 +228,7 @@ export default function TVLoginScreen() {
                       <p className="text-xs truncate" style={{ color: '#64748b' }}>{p.type.toUpperCase()}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button tabIndex={0} onClick={() => activateSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: '#E50914' }}>
+                      <button tabIndex={0} onClick={() => activateSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: 'var(--brand-primary)' }}>
                         <Play size={14} className="text-white" />
                       </button>
                       <button tabIndex={0} onClick={() => removeSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>

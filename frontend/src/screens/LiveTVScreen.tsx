@@ -40,7 +40,7 @@ export default function LiveTVScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -69,7 +69,7 @@ export default function LiveTVScreen() {
               />
             </div>
             <button className="flex items-center justify-center rounded-xl flex-shrink-0" style={{ width: 38, height: 38, background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.3)' }}>
-              <Grid3X3 size={17} style={{ color: '#E50914' }} />
+              <Grid3X3 size={17} style={{ color: 'var(--brand-primary)' }} />
             </button>
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function LiveTVScreen() {
             onClick={() => setCat("all")}
             className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold"
             style={{
-              background: cat === "all" ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+              background: cat === "all" ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
               color: cat === "all" ? '#fff' : '#64748b',
               border: cat === "all" ? 'none' : '1px solid #2A2A2A',
               boxShadow: cat === "all" ? '0 4px 12px rgba(229,9,20,0.3)' : 'none',
@@ -95,7 +95,7 @@ export default function LiveTVScreen() {
                 onClick={() => setCat(c.category_id)}
                 className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold"
                 style={{
-                  background: isSelected ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                  background: isSelected ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                   color: isSelected ? '#fff' : '#64748b',
                   border: isSelected ? 'none' : '1px solid #2A2A2A',
                   boxShadow: isSelected ? '0 4px 12px rgba(229,9,20,0.3)' : 'none',
@@ -124,7 +124,7 @@ export default function LiveTVScreen() {
           <button
             key={ch.stream_id}
             onClick={() => navigate(`/watch/live/${ch.stream_id}`)}
-            className="group w-full text-left rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform focus:outline-none focus:ring-2 focus:ring-[#E50914]"
+            className="group w-full text-left rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform focus:outline-none focus:ring-2 focus:ring-brand"
             style={{ background: '#1A1A1A', border: '1px solid #2A2A2A' }}
           >
             <div className="flex items-center gap-3 p-3 pointer-events-none">
@@ -148,7 +148,7 @@ export default function LiveTVScreen() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-sm font-bold truncate" style={{ color: '#f1f5f9' }}>{ch.name || `Channel ${idx + 1}`}</span>
                   <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-md font-semibold"
-                    style={{ background: 'rgba(229,9,20,0.1)', color: '#E50914', fontSize: 9, letterSpacing: '0.03em' }}>
+                    style={{ background: 'rgba(229,9,20,0.1)', color: 'var(--brand-primary)', fontSize: 9, letterSpacing: '0.03em' }}>
                     {(ch.category_name || ch.category_id || "LIVE").toUpperCase()}
                   </span>
                 </div>
@@ -167,7 +167,7 @@ export default function LiveTVScreen() {
               {/* Actions */}
               <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
                 <div className="flex items-center justify-center rounded-full"
-                  style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 4px 12px rgba(229,9,20,0.35)' }}>
+                  style={{ width: 34, height: 34, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 4px 12px rgba(229,9,20,0.35)' }}>
                   <Play size={13} fill="white" style={{ color: 'white', marginLeft: 1 }} />
                 </div>
               </div>
@@ -178,11 +178,11 @@ export default function LiveTVScreen() {
               <div className="px-3 pb-2.5 pointer-events-none">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs" style={{ color: '#475569' }}>Now</span>
-                  <span className="text-xs font-semibold" style={{ color: '#E50914' }}>LIVE</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--brand-primary)' }}>LIVE</span>
                   <span className="text-xs" style={{ color: '#475569' }}>Next</span>
                 </div>
                 <div className="h-1 rounded-full w-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                  <div className="h-full rounded-full relative" style={{ width: '42%', background: 'linear-gradient(90deg, #E50914, #B80710)' }}>
+                  <div className="h-full rounded-full relative" style={{ width: '42%', background: 'linear-gradient(90deg, var(--brand-primary), #B80710)' }}>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full" style={{ width: 8, height: 8, background: '#fff', boxShadow: '0 0 6px rgba(229,9,20,0.8)' }} />
                   </div>
                 </div>

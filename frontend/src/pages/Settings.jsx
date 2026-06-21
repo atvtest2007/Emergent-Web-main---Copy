@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Settings as Api, Playlists } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import SpeedTest from "@/components/SpeedTest";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,7 +13,6 @@ import { PLAYER_OPTIONS } from "@/lib/store";
 import { Loader2, Settings as Cog, Cpu, Subtitles, Volume2, Network, HardDrive, MonitorSmartphone, UserCircle2, Shield, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 
 const TABS = [
     { id: "playback", label: "Playback", icon: Cog },
@@ -23,7 +23,6 @@ const TABS = [
     { id: "cache", label: "Cache", icon: HardDrive },
     { id: "interface", label: "Interface", icon: MonitorSmartphone },
     { id: "accounts", label: "Accounts", icon: UserCircle2 },
-    { id: "parental", label: "Parental Controls", icon: Shield },
     { id: "privacy", label: "Privacy", icon: Shield },
 ];
 
@@ -38,7 +37,7 @@ export default function SettingsPage() {
         (async () => {
             setLoading(true);
             try {
-                const [s, a] = await Promise.all([Api.get(), Playlists.list()]);
+                const [s, a] = await Promise.all([Api.get().catch(() => ({})), Playlists.list().catch(() => [])]);
                 setSettings(s);
                 setAccounts(a || []);
             } finally {
@@ -56,13 +55,13 @@ export default function SettingsPage() {
     };
 
     if (loading || !settings) {
-        return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#E50914]" /></div>;
+        return <div className="h-full min-h-[80vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-brand" /></div>;
     }
 
     return (
         <div className="px-6 lg:px-12 py-8 pt-12" data-testid="settings-page">
             <div className="mb-8">
-                <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2 flex items-center gap-2">
+                <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2 flex items-center gap-2">
                     <Cog className="w-3.5 h-3.5" /> Preferences
                 </div>
                 <h1 className="font-display text-5xl lg:text-6xl font-black tracking-tighter">Settings</h1>
@@ -76,7 +75,7 @@ export default function SettingsPage() {
                             <button
                                 key={t.id}
                                 onClick={() => setTab(t.id)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition w-full text-left ${tab === t.id ? "bg-[#E50914]/10 text-white border border-[#E50914]/30" : "text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent"}`}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition w-full text-left ${tab === t.id ? "bg-brand/10 text-white border border-brand/30" : "text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent"}`}
                                 data-testid={`settings-tab-${t.id}`}
                             >
                                 <I className="w-4 h-4" />
@@ -143,13 +142,17 @@ export default function SettingsPage() {
                         </Card>
                     )}
                     {tab === "network" && (
-                        <Card className="bg-[#121212] border-white/10 p-6 space-y-6">
-                            <Row label="Buffer size" desc={`${settings.buffer_size} seconds of ahead buffer`}>
-                                <div className="w-56">
-                                    <Slider value={[settings.buffer_size]} min={5} max={120} step={5} onValueChange={(v) => update({ buffer_size: v[0] })} data-testid="setting-buffer" />
-                                </div>
-                            </Row>
-                        </Card>
+                        <div className="space-y-6">
+                            <Card className="bg-[#121212] border-white/10 p-6 space-y-6">
+                                <Row label="Buffer size" desc={`${settings.buffer_size} seconds of ahead buffer`}>
+                                    <div className="w-56">
+                                        <Slider value={[settings.buffer_size]} min={30} max={150} step={10} onValueChange={(v) => update({ buffer_size: v[0] })} data-testid="setting-buffer" />
+                                    </div>
+                                </Row>
+                            </Card>
+                            
+                            <SpeedTest />
+                        </div>
                     )}
                     {tab === "cache" && (
                         <Card className="bg-[#121212] border-white/10 p-6 space-y-6">
@@ -184,13 +187,13 @@ export default function SettingsPage() {
                                         <div>
                                             <div className="text-sm font-semibold flex items-center gap-2">
                                                 {a.name}
-                                                {a.is_active && <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#E50914]/20 text-[#E50914] font-bold">Active</span>}
+                                                {a.is_active && <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand/20 text-brand font-bold">Active</span>}
                                             </div>
                                             <div className="text-xs text-zinc-500 mt-0.5">{a.type.toUpperCase()} · {a.server_url || a.m3u_url || "Local"}</div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {!a.is_active && (
-                                                <Button size="sm" className="bg-[#E50914] hover:bg-[#F40612]" onClick={async () => { await Playlists.activate(a.id); toast.success("Switched account"); nav("/home"); }}>Use</Button>
+                                                <Button size="sm" className="bg-brand hover:bg-[#F40612]" onClick={async () => { await Playlists.activate(a.id); toast.success("Switched account"); window.location.href = "/home"; }}>Use</Button>
                                             )}
                                             <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10" onClick={async () => { await Playlists.remove(a.id); setAccounts(accounts.filter(x => x.id !== a.id)); }}>
                                                 <Trash2 className="w-3.5 h-3.5" />
@@ -200,30 +203,6 @@ export default function SettingsPage() {
                                 ))}
                             </div>
                             <Button className="mt-5 bg-white/5 border border-white/10 hover:bg-white/10" onClick={() => nav("/")} data-testid="settings-add-account">+ Add new account</Button>
-                        </Card>
-                    )}
-                    {tab === "parental" && (
-                        <Card className="bg-[#121212] border-white/10 p-6 space-y-6">
-                            <Row label="Parental PIN" desc="Set a 4-digit PIN to lock categories (leave empty to disable)">
-                                <Input 
-                                    type="password" 
-                                    maxLength={4} 
-                                    className="w-24 text-center bg-[#0a0a0a] border-white/10" 
-                                    value={settings.parental_pin || ""} 
-                                    onChange={(e) => update({ parental_pin: e.target.value })} 
-                                    placeholder="0000" 
-                                />
-                            </Row>
-                            {settings.parental_pin && (
-                                <Row label="Locked Categories" desc="Keywords to lock (e.g., 'adult, xxx, 18+')">
-                                    <Input 
-                                        value={(settings.locked_categories || []).join(", ")} 
-                                        onChange={(e) => update({ locked_categories: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
-                                        placeholder="e.g. xxx, adult" 
-                                        className="bg-[#0a0a0a] border-white/10 w-56"
-                                    />
-                                </Row>
-                            )}
                         </Card>
                     )}
                     {tab === "privacy" && (

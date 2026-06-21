@@ -1,113 +1,102 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const isDev = !app.isPackaged;
-const isMac = process.platform === 'darwin';
+const { spawn } = require('child_process');
 
-function createWindow() {
-  const mainWindow = new BrowserWindow({
+let mainWindow;
+let serverProcess;
+
+const isDev = !app.isPackaged;
+
+function createWindow(port) {
+  mainWindow = new BrowserWindow({
     width: 1280,
-    height: 720,
-    titleBarStyle: isMac ? 'hiddenInset' : 'default',
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    autoHideMenuBar: true,
+    title: 'Maxx Player',
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      preload: path.join(__dirname, 'preload.js')
+      contextIsolation: true
     }
   });
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  }
+  mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+
+  mainWindow.on('closed', function () {
+    mainWindow = null;
+  });
 }
 
-app.whenReady().then(() => {
-  createWindow();
-
-  if (isMac) {
-    const template = [
-      {
-        label: app.name || 'MaxxPlayer',
-        submenu: [
-          { role: 'about' },
-          { type: 'separator' },
-          { role: 'services' },
-          { type: 'separator' },
-          { role: 'hide' },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit' }
-        ]
-      },
-      {
-        label: 'File',
-        submenu: [
-          { role: 'close' }
-        ]
-      },
-      {
-        label: 'Edit',
-        submenu: [
-          { role: 'undo' },
-          { role: 'redo' },
-          { type: 'separator' },
-          { role: 'cut' },
-          { role: 'copy' },
-          { role: 'paste' },
-          { role: 'pasteAndMatchStyle' },
-          { role: 'delete' },
-          { role: 'selectAll' }
-        ]
-      },
-      {
-        label: 'View',
-        submenu: [
-          { role: 'reload' },
-          { role: 'forceReload' },
-          { role: 'toggleDevTools' },
-          { type: 'separator' },
-          { role: 'resetZoom' },
-          { role: 'zoomIn' },
-          { role: 'zoomOut' },
-          { type: 'separator' },
-          { role: 'togglefullscreen' }
-        ]
-      },
-      {
-        label: 'Window',
-        submenu: [
-          { role: 'minimize' },
-          { role: 'zoom' },
-          { type: 'separator' },
-          { role: 'front' }
-        ]
-      },
-      {
-        role: 'help',
-        submenu: [
-          {
-            label: 'Learn More',
-            click: async () => {
-              const { shell } = require('electron');
-              await shell.openExternal('https://maxxplayer.com');
-            }
-          }
-        ]
-      }
-    ];
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+function startBackend() {
+  console.log("Starting backend...");
+  let cmd;
+  let args;
+  
+  if (isDev) {
+    // In development, run the python script directly
+    cmd = 'python';
+    const runnerPath = path.join(__dirname, '..', '..', 'backend', 'runner.py');
+    const frontendDir = path.join(__dirname, '..', 'build');
+    args = [runnerPath, frontendDir];
+  } else {
+    // In production, run the packaged executable
+    cmd = path.join(process.resourcesPath, '..', 'bin', 'server.exe');
+    const frontendDir = path.join(process.resourcesPath, '..', 'frontend');
+    args = [frontendDir];
   }
-
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  
+  console.log(`Running: ${cmd} ${args.join(' ')}`);
+  
+  serverProcess = spawn(cmd, args, {
+    detached: false
   });
-});
+
+  let portFound = false;
+
+  serverProcess.stdout.on('data', (data) => {
+    const output = data.toString();
+    console.log(`Backend: ${output}`);
+    
+    // Look for PORT:xxxx
+    if (!portFound) {
+      const match = output.match(/PORT:(\d+)/);
+      if (match) {
+        portFound = true;
+        const port = match[1];
+        console.log(`Backend started on port ${port}`);
+        createWindow(port);
+      }
+    }
+  });
+
+  serverProcess.stderr.on('data', (data) => {
+    console.error(`Backend Error: ${data.toString()}`);
+  });
+
+  serverProcess.on('close', (code) => {
+    console.log(`Backend process exited with code ${code}`);
+  });
+}
+
+app.on('ready', startBackend);
 
 app.on('window-all-closed', function () {
-  if (!isMac) app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('will-quit', () => {
+  // Ensure the backend process is killed when the app quits
+  if (serverProcess) {
+    serverProcess.kill();
+  }
+});
+
+app.on('activate', function () {
+  if (mainWindow === null) {
+    // We would need to know the port again to re-create the window on macOS,
+    // but this app is targeted for Windows primarily.
+  }
 });

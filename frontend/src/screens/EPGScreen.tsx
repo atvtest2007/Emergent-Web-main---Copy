@@ -27,7 +27,7 @@ export default function EPGScreen() {
           </button>
           {['Mon 19', 'Tue 20', 'Wed 21', 'Thu 22', 'Fri 23'].map((d, i) => (
             <button key={d} className="flex-1 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: i === 2 ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A', color: i === 2 ? '#fff' : '#64748b', border: i === 2 ? 'none' : '1px solid #2A2A2A' }}>
+              style={{ background: i === 2 ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A', color: i === 2 ? '#fff' : '#64748b', border: i === 2 ? 'none' : '1px solid #2A2A2A' }}>
               {d}
             </button>
           ))}
@@ -38,7 +38,7 @@ export default function EPGScreen() {
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {epgCategories.map((cat, i) => (
             <button key={cat} className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
-              style={{ background: i === 0 ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A', color: i === 0 ? '#fff' : '#64748b', border: i === 0 ? 'none' : '1px solid #2A2A2A' }}>
+              style={{ background: i === 0 ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A', color: i === 0 ? '#fff' : '#64748b', border: i === 0 ? 'none' : '1px solid #2A2A2A' }}>
               {cat}
             </button>
           ))}
@@ -49,9 +49,9 @@ export default function EPGScreen() {
         <div className="flex items-center border-b flex-shrink-0" style={{ borderColor: '#2A2A2A', paddingLeft: 80 }}>
           <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {timeSlots.map((t) => (
-              <div key={t} className="flex-shrink-0 text-xs font-semibold py-2 px-3" style={{ color: t === '20:00' ? '#E50914' : '#475569', minWidth: 70 }}>
+              <div key={t} className="flex-shrink-0 text-xs font-semibold py-2 px-3" style={{ color: t === '20:00' ? 'var(--brand-primary)' : '#475569', minWidth: 70 }}>
                 {t}
-                {t === '20:00' && <div className="h-0.5 mt-1 rounded-full" style={{ background: '#E50914' }} />}
+                {t === '20:00' && <div className="h-0.5 mt-1 rounded-full" style={{ background: 'var(--brand-primary)' }} />}
               </div>
             ))}
           </div>
@@ -67,7 +67,7 @@ export default function EPGScreen() {
               <div className="flex items-center overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
                 <div className="flex-shrink-0 flex flex-col justify-center px-3 py-2 m-1 rounded-xl relative"
                   style={{ minWidth: 140, background: 'linear-gradient(135deg, rgba(229,9,20,0.15), rgba(2,132,199,0.08))', border: '1px solid rgba(229,9,20,0.25)' }}>
-                  <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full" style={{ background: '#E50914' }} />
+                  <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full" style={{ background: 'var(--brand-primary)' }} />
                   <span className="text-xs font-semibold truncate" style={{ color: '#e2e8f0' }}>{row.now}</span>
                   <span className="text-xs mt-0.5" style={{ color: '#64748b' }}>{row.nowTime}</span>
                 </div>

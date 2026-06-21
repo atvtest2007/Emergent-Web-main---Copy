@@ -7,12 +7,19 @@ module.exports = {
   ],
   theme: {
   	extend: {
+      screens: {
+        '3xl': '1920px', // Full HD / 2K base
+        '4xl': '2560px', // 2K Ultrawide / 4K base
+        '5xl': '3840px', // 4K / Ultrawide
+        'uw': '5120px',  // Super Ultrawide
+      },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+            brand: 'var(--brand-primary)',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

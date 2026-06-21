@@ -37,7 +37,7 @@ export default function FavoritesScreen() {
             <div className="flex-1 overflow-y-auto pb-20 px-5" style={{ scrollbarWidth: 'none' }}>
                 {loading ? (
                     <div className="flex items-center justify-center pt-20">
-                        <Loader2 className="w-8 h-8 text-[#E50914] animate-spin" />
+                        <Loader2 className="w-8 h-8 text-brand animate-spin" />
                     </div>
                 ) : favorites.length === 0 ? (
                     <div className="flex flex-col items-center justify-center pt-20 text-center">

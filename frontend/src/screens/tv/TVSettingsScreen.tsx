@@ -8,7 +8,7 @@ const sections = [
   {
     title: 'Account',
     icon: User,
-    color: '#E50914',
+    color: 'var(--brand-primary)',
     items: [
       { label: 'Profile', value: 'admin@maxxplayer.com', action: true },
       { label: 'Subscription', value: 'Premium · Active', badge: 'ACTIVE', badgeColor: '#22c55e' },
@@ -50,7 +50,7 @@ const sections = [
 
 function Toggle({ on }: { on: boolean }) {
   return (
-    <div className="relative rounded-full flex-shrink-0" style={{ width: 36, height: 20, background: on ? 'linear-gradient(135deg, #E50914, #B80710)' : '#2A2A2A', transition: 'background 0.2s' }}>
+    <div className="relative rounded-full flex-shrink-0" style={{ width: 36, height: 20, background: on ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#2A2A2A', transition: 'background 0.2s' }}>
       <div className="absolute top-0.5 rounded-full" style={{ width: 16, height: 16, background: '#fff', left: on ? 18 : 2, transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
     </div>
   );
@@ -103,7 +103,7 @@ export default function TVSettingsScreen() {
                               {item.options?.map((opt, oi) => (
                                 <div key={opt} className="px-2.5 py-1 text-xs font-bold"
                                   style={{
-                                    background: oi === item.selected ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                                    background: oi === item.selected ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                                     color: oi === item.selected ? '#fff' : '#475569',
                                     fontSize: 9,
                                   }}>
@@ -130,19 +130,19 @@ export default function TVSettingsScreen() {
               <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid #1a2030' }}>
                 <div className="flex items-center justify-center rounded-lg flex-shrink-0"
                   style={{ width: 28, height: 28, background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.2)' }}>
-                  <Info size={14} style={{ color: '#E50914' }} />
+                  <Info size={14} style={{ color: 'var(--brand-primary)' }} />
                 </div>
                 <span className="text-sm font-black" style={{ color: '#e2e8f0' }}>About</span>
               </div>
               <div className="p-4 flex flex-col items-center gap-3">
-                <div className="flex items-center justify-center rounded-2xl" style={{ width: 52, height: 52, background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 0 20px rgba(229,9,20,0.4)' }}>
+                <div className="flex items-center justify-center rounded-2xl" style={{ width: 52, height: 52, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 0 20px rgba(229,9,20,0.4)' }}>
                   <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
                     <path d="M12 8L38 24L12 40V8Z" fill="white" />
                     <circle cx="36" cy="12" r="5" fill="rgba(255,255,255,0.7)" />
                   </svg>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-black" style={{ color: '#f8fafc' }}>Maxx<span style={{ color: '#E50914' }}>Player</span></p>
+                  <p className="text-sm font-black" style={{ color: '#f8fafc' }}>Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span></p>
                   <p className="text-xs" style={{ color: '#475569' }}>Version 1.0.0 · Build 2024.12</p>
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>

@@ -6,7 +6,6 @@ import ContentRail from "@/components/ContentRail";
 import PosterCard from "@/components/PosterCard";
 import ChannelCard from "@/components/ChannelCard";
 import { Loader2, Tv, Film, Clapperboard, Sparkles, Activity } from "lucide-react";
-import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function Home() {
     const nav = useNavigate();
@@ -17,7 +16,6 @@ export default function Home() {
     const [movies, setMovies] = useState([]);
     const [series, setSeries] = useState([]);
     const [cont, setCont] = useState([]);
-    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
 
     useEffect(() => {
         (async () => {
@@ -46,15 +44,14 @@ export default function Home() {
 
     const featured = useMemo(() => {
         if (movies.length === 0 && series.length === 0) return null;
-        const pool = [...movies.slice(0, 5), ...series.slice(0, 3)].filter(it => !isCategoryLocked(it.category_name));
-        if (pool.length === 0) return null;
+        const pool = [...movies.slice(0, 5), ...series.slice(0, 3)];
         return pool[Math.floor(Math.random() * pool.length)];
-    }, [movies, series, isCategoryLocked]);
+    }, [movies, series]);
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-[#E50914]" />
+            <div className="h-full min-h-[80vh] flex items-center justify-center">
+                <Loader2 className="w-10 h-10 animate-spin text-brand" />
             </div>
         );
     }
@@ -65,11 +62,11 @@ export default function Home() {
 
             {/* Account status strip */}
             {account && (
-                <section className="px-6 lg:px-12 -mt-6 relative z-10">
+                <section className="px-6 md:px-12 2xl:px-24 4xl:px-32 5xl:px-48 uw:px-64 -mt-6 relative z-10">
                     <div className="glass-strong rounded-md border border-white/10 p-4 flex flex-wrap items-center gap-6" data-testid="account-strip">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-[#E50914]/15 flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-[#E50914]" />
+                            <div className="w-10 h-10 rounded-md bg-brand/15 flex items-center justify-center">
+                                <Activity className="w-5 h-5 text-brand" />
                             </div>
                             <div>
                                 <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold">Account</div>
@@ -113,26 +110,21 @@ export default function Home() {
 
             {cont.length > 0 && (
                 <ContentRail title="Continue Watching" subtitle="Pick up where you left off" testId="rail-continue">
-                    {cont.map((c) => {
-                        const itemData = c.content_data || { name: c.content_id, stream_id: c.content_id };
-                        return (
-                            <PosterCard
-                                key={c.content_id}
-                                item={itemData}
-                                type={c.content_type === "series" || c.content_type === "episode" ? "series" : "movie"}
-                                progress={c.progress}
-                                isLocked={isCategoryLocked(itemData.category_name)}
-                                onUnlock={unlock}
-                            />
-                        );
-                    })}
+                    {cont.map((c) => (
+                        <PosterCard
+                            key={c.content_id}
+                            item={{ ...(c.content_data || {}), id: c.content_id, stream_id: c.content_id, series_id: c.content_id }}
+                            type={c.content_type === "series" || c.content_type === "episode" ? "series" : "movie"}
+                            progress={c.progress}
+                        />
+                    ))}
                 </ContentRail>
             )}
 
             {movies.length > 0 && (
                 <ContentRail title="Trending Movies" subtitle="Hand-picked for you" testId="rail-movies">
                     {movies.slice(0, 20).map((m) => (
-                        <PosterCard key={m.stream_id} item={m} type="movie" isLocked={isCategoryLocked(m.category_name)} onUnlock={unlock} />
+                        <PosterCard key={m.stream_id} item={m} type="movie" />
                     ))}
                 </ContentRail>
             )}
@@ -140,13 +132,13 @@ export default function Home() {
             {series.length > 0 && (
                 <ContentRail title="Featured Series" subtitle="Premium binge worthy" testId="rail-series">
                     {series.slice(0, 20).map((s) => (
-                        <PosterCard key={s.series_id} item={s} type="series" isLocked={isCategoryLocked(s.category_name)} onUnlock={unlock} />
+                        <PosterCard key={s.series_id} item={s} type="series" />
                     ))}
                 </ContentRail>
             )}
 
             {live.length > 0 && (
-                <section className="px-6 lg:px-12 mt-12 pb-12" data-testid="rail-live">
+                <section className="px-6 md:px-12 2xl:px-24 4xl:px-32 5xl:px-48 uw:px-64 mt-12 4xl:mt-16 pb-12" data-testid="rail-live">
                     <div className="flex items-end justify-between mb-4">
                         <div>
                             <h2 className="font-display text-3xl font-bold tracking-tight">Now Live</h2>
@@ -156,20 +148,19 @@ export default function Home() {
                             View all →
                         </Link>
                     </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {live.slice(0, 6).map((c) => <ChannelCard key={c.stream_id} channel={c} isLocked={isCategoryLocked(c.category_name)} onUnlock={unlock} />)}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 3xl:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] 4xl:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] 5xl:grid-cols-[repeat(auto-fill,minmax(500px,1fr))] gap-4 4xl:gap-6">
+                        {live.slice(0, 6).map((c) => <ChannelCard key={c.stream_id} channel={c} />)}
                     </div>
                 </section>
             )}
 
             {live.length === 0 && movies.length === 0 && series.length === 0 && (
-                <div className="px-6 lg:px-12 py-20 text-center">
-                    <Sparkles className="w-10 h-10 text-[#E50914] mx-auto mb-3" />
+                <div className="px-6 md:px-12 2xl:px-24 4xl:px-32 5xl:px-48 uw:px-64 py-20 text-center">
+                    <Sparkles className="w-10 h-10 text-brand mx-auto mb-3" />
                     <h2 className="font-display text-3xl font-bold mb-2">No content yet</h2>
                     <p className="text-zinc-400">Your playlist returned no streams. Try a different account or load the demo library.</p>
                 </div>
             )}
-            {renderModal()}
         </div>
     );
 }

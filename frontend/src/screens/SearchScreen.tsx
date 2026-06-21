@@ -43,7 +43,7 @@ export default function SearchScreen() {
                     className="flex items-center gap-3 px-4 rounded-2xl mb-4"
                     style={{ background: '#1A1A1A', border: '1.5px solid rgba(229,9,20,0.45)', height: 52 }}
                 >
-                    <Search size={18} style={{ color: '#E50914', flexShrink: 0 }} />
+                    <Search size={18} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} />
                     <input
                         autoFocus
                         value={q}
@@ -67,7 +67,7 @@ export default function SearchScreen() {
                     </div>
                 ) : loading ? (
                     <div className="flex items-center justify-center pt-10">
-                        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+                        <Loader2 className="w-8 h-8 animate-spin text-brand" />
                     </div>
                 ) : totalResults === 0 ? (
                     <div className="text-center pt-10 text-zinc-400">No results found for "{q}"</div>

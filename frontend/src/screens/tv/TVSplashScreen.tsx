@@ -36,7 +36,7 @@ export default function TVSplashScreen() {
         <div className="flex items-center justify-center rounded-3xl"
           style={{
             width: 120, height: 120,
-            background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)',
+            background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)',
             boxShadow: '0 0 60px rgba(229,9,20,0.5), 0 20px 60px rgba(0,0,0,0.5)',
           }}>
           <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
@@ -46,7 +46,7 @@ export default function TVSplashScreen() {
         </div>
         <div className="text-center">
           <h1 className="font-black tracking-tight" style={{ color: '#f8fafc', fontSize: 52, letterSpacing: '-1px', lineHeight: 1 }}>
-            Maxx<span style={{ color: '#E50914' }}>Player</span>
+            Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
           </h1>
           <p className="text-lg font-medium mt-2" style={{ color: '#475569' }}>Stream Everything · Anywhere</p>
         </div>
@@ -66,10 +66,10 @@ export default function TVSplashScreen() {
       <div className="absolute bottom-16 flex flex-col items-center gap-4">
         {/* Progress bar */}
         <div className="rounded-full overflow-hidden" style={{ width: 200, height: 3, background: 'rgba(255,255,255,0.08)' }}>
-          <div className="h-full rounded-full" style={{ width: '65%', background: 'linear-gradient(90deg, #E50914, #38bdf8)' }} />
+          <div className="h-full rounded-full" style={{ width: '65%', background: 'linear-gradient(90deg, var(--brand-primary), #38bdf8)' }} />
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#E50914', boxShadow: '0 0 6px rgba(229,9,20,0.8)' }} />
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--brand-primary)', boxShadow: '0 0 6px rgba(229,9,20,0.8)' }} />
           <p className="text-sm font-medium" style={{ color: '#475569' }}>Loading your content...</p>
         </div>
       </div>

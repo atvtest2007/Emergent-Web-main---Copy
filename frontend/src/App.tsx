@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import "./index.css";
-import { HashRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Capacitor } from '@capacitor/core';
-
-import AccountLogin from "@/pages/AccountLogin";
-import AccountRegister from "@/pages/AccountRegister";
-import { AuthProvider, useAuth } from "@/lib/AuthContext";
+import { Branding } from "@/lib/api";
 
 // Web Pages
 import Login from "@/pages/Login";
@@ -25,6 +22,7 @@ import SettingsPage from "@/pages/Settings";
 import EPG from "@/pages/EPG";
 import Watch from "@/pages/Watch";
 import Layout from "@/components/Layout";
+import AdminPanel from "@/pages/AdminPanel";
 
 // Mobile Screens
 import MobileSplashScreen from './screens/SplashScreen';
@@ -60,33 +58,24 @@ import type { Screen } from './types';
 
 const WebShell = ({ children }: { children: React.ReactNode }) => <Layout>{children}</Layout>;
 
-const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-    const { user, loading } = useAuth();
-    if (loading) return <div className="flex h-screen items-center justify-center bg-background"><p className="text-white">Loading...</p></div>;
-    if (!user) return <Navigate to="/account/login" replace />;
-    return <>{children}</>;
-};
-
 const MobileApp = () => {
   return (
     <div className="mobile-app-container w-full h-screen overflow-hidden text-white bg-[#030608] font-sans">
       <MemoryRouter>
         <Routes>
-          <Route path="/account/login" element={<AccountLogin />} />
-          <Route path="/account/register" element={<AccountRegister />} />
-          <Route path="/" element={<AuthGuard><MobileSplashScreen /></AuthGuard>} />
-          <Route path="/login" element={<AuthGuard><MobileLoginScreen /></AuthGuard>} />
-          <Route path="/home" element={<AuthGuard><MobileHomeScreen /></AuthGuard>} />
-          <Route path="/live" element={<AuthGuard><MobileLiveTVScreen /></AuthGuard>} />
-          <Route path="/movies" element={<AuthGuard><MobileMoviesScreen /></AuthGuard>} />
-          <Route path="/movie/:id" element={<AuthGuard><MobileMovieDetailScreen /></AuthGuard>} />
-          <Route path="/series" element={<AuthGuard><MobileSeriesScreen /></AuthGuard>} />
-          <Route path="/series/:id" element={<AuthGuard><MobileSeriesDetailScreen /></AuthGuard>} />
-          <Route path="/epg" element={<AuthGuard><MobileEPGScreen /></AuthGuard>} />
-          <Route path="/favorites" element={<AuthGuard><MobileFavoritesScreen /></AuthGuard>} />
-          <Route path="/search" element={<AuthGuard><MobileSearchScreen /></AuthGuard>} />
-          <Route path="/settings" element={<AuthGuard><MobileSettingsScreen /></AuthGuard>} />
-          <Route path="/watch/:type/:id" element={<AuthGuard><MobilePlayerScreen /></AuthGuard>} />
+          <Route path="/" element={<MobileSplashScreen />} />
+          <Route path="/login" element={<MobileLoginScreen />} />
+          <Route path="/home" element={<MobileHomeScreen />} />
+          <Route path="/live" element={<MobileLiveTVScreen />} />
+          <Route path="/movies" element={<MobileMoviesScreen />} />
+          <Route path="/movie/:id" element={<MobileMovieDetailScreen />} />
+          <Route path="/series" element={<MobileSeriesScreen />} />
+          <Route path="/series/:id" element={<MobileSeriesDetailScreen />} />
+          <Route path="/epg" element={<MobileEPGScreen />} />
+          <Route path="/favorites" element={<MobileFavoritesScreen />} />
+          <Route path="/search" element={<MobileSearchScreen />} />
+          <Route path="/settings" element={<MobileSettingsScreen />} />
+          <Route path="/watch/:type/:id" element={<MobilePlayerScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MemoryRouter>
@@ -99,17 +88,15 @@ const TVApp = () => {
     <div className="tv-app-container w-full h-screen overflow-hidden text-white bg-[#030608] font-sans">
       <MemoryRouter>
         <Routes>
-          <Route path="/account/login" element={<AccountLogin />} />
-          <Route path="/account/register" element={<AccountRegister />} />
-          <Route path="/" element={<AuthGuard><TVSplashScreen /></AuthGuard>} />
-          <Route path="/login" element={<AuthGuard><TVLoginScreen /></AuthGuard>} />
-          <Route path="/home" element={<AuthGuard><TVHomeScreen /></AuthGuard>} />
-          <Route path="/live" element={<AuthGuard><TVLiveTVScreen /></AuthGuard>} />
-          <Route path="/movies" element={<AuthGuard><TVMoviesScreen /></AuthGuard>} />
-          <Route path="/series" element={<AuthGuard><TVSeriesScreen /></AuthGuard>} />
-          <Route path="/series/:id" element={<AuthGuard><TVSeriesDetailScreen /></AuthGuard>} />
-          <Route path="/settings" element={<AuthGuard><TVSettingsScreen /></AuthGuard>} />
-          <Route path="/watch/:type/:id" element={<AuthGuard><TVPlayerScreen /></AuthGuard>} />
+          <Route path="/" element={<TVSplashScreen />} />
+          <Route path="/login" element={<TVLoginScreen />} />
+          <Route path="/home" element={<TVHomeScreen />} />
+          <Route path="/live" element={<TVLiveTVScreen />} />
+          <Route path="/movies" element={<TVMoviesScreen />} />
+          <Route path="/series" element={<TVSeriesScreen />} />
+          <Route path="/series/:id" element={<TVSeriesDetailScreen />} />
+          <Route path="/settings" element={<TVSettingsScreen />} />
+          <Route path="/watch/:type/:id" element={<TVPlayerScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MemoryRouter>
@@ -119,27 +106,26 @@ const TVApp = () => {
 
 const WebApp = () => {
   return (
-    <HashRouter>
+    <BrowserRouter>
         <Routes>
-            <Route path="/account/login" element={<AccountLogin />} />
-            <Route path="/account/register" element={<AccountRegister />} />
-            <Route path="/" element={<AuthGuard><Login /></AuthGuard>} />
-            <Route path="/home" element={<AuthGuard><WebShell><Home /></WebShell></AuthGuard>} />
-            <Route path="/live" element={<AuthGuard><WebShell><LiveTV /></WebShell></AuthGuard>} />
-            <Route path="/movies" element={<AuthGuard><WebShell><Movies /></WebShell></AuthGuard>} />
-            <Route path="/movie/:id" element={<AuthGuard><WebShell><MovieDetails /></WebShell></AuthGuard>} />
-            <Route path="/series" element={<AuthGuard><WebShell><Series /></WebShell></AuthGuard>} />
-            <Route path="/series/:id" element={<AuthGuard><WebShell><SeriesDetails /></WebShell></AuthGuard>} />
-            <Route path="/vod" element={<AuthGuard><WebShell><VOD /></WebShell></AuthGuard>} />
-            <Route path="/favorites" element={<AuthGuard><WebShell><Favorites /></WebShell></AuthGuard>} />
-            <Route path="/history" element={<AuthGuard><WebShell><HistoryPage /></WebShell></AuthGuard>} />
-            <Route path="/search" element={<AuthGuard><WebShell><SearchPage /></WebShell></AuthGuard>} />
-            <Route path="/settings" element={<AuthGuard><WebShell><SettingsPage /></WebShell></AuthGuard>} />
-            <Route path="/epg" element={<AuthGuard><WebShell><EPG /></WebShell></AuthGuard>} />
-            <Route path="/watch/:type/:id" element={<AuthGuard><Watch /></AuthGuard>} />
+            <Route path="/" element={<Login />} />
+            <Route path="/home" element={<WebShell><Home /></WebShell>} />
+            <Route path="/live" element={<WebShell><LiveTV /></WebShell>} />
+            <Route path="/movies" element={<WebShell><Movies /></WebShell>} />
+            <Route path="/movie/:id" element={<WebShell><MovieDetails /></WebShell>} />
+            <Route path="/series" element={<WebShell><Series /></WebShell>} />
+            <Route path="/series/:id" element={<WebShell><SeriesDetails /></WebShell>} />
+            <Route path="/vod" element={<WebShell><VOD /></WebShell>} />
+            <Route path="/favorites" element={<WebShell><Favorites /></WebShell>} />
+            <Route path="/history" element={<WebShell><HistoryPage /></WebShell>} />
+            <Route path="/search" element={<WebShell><SearchPage /></WebShell>} />
+            <Route path="/settings" element={<WebShell><SettingsPage /></WebShell>} />
+            <Route path="/epg" element={<WebShell><EPG /></WebShell>} />
+            <Route path="/admin" element={<WebShell><AdminPanel /></WebShell>} />
+            <Route path="/watch/:type/:id" element={<Watch />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 };
 
@@ -177,38 +163,48 @@ export default function App() {
       }
       return 'web';
     };
-    setPlatform(detectPlatform());
     
-    // Check if we are running in macOS Electron via the preload script
-    // @ts-ignore
-    if (window.electron && window.electron.platform === 'darwin') {
-      document.body.classList.add('mac-os');
-    }
+    
+    setPlatform(detectPlatform());
+
+    Branding.get().then(brand => {
+        if (brand.brand_name) document.title = brand.brand_name;
+        if (brand.favicon_url) {
+            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (!link) {
+                link = document.createElement('link') as HTMLLinkElement;
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = brand.favicon_url;
+        }
+        if (brand.primary_color) {
+            document.documentElement.style.setProperty('--brand-primary', brand.primary_color);
+        }
+        if (brand.watermark_url) {
+            (window as any).BRAND_WATERMARK = brand.watermark_url;
+        }
+    }).catch(console.error);
+
   }, []);
 
   return (
-    <AuthProvider>
-        <div className="App">
-            {/* @ts-ignore */}
-            {window.electron && window.electron.platform === 'darwin' && (
-                <div className="mac-titlebar" />
-            )}
-            <Toaster
-                theme="dark"
-                position="bottom-right"
-                toastOptions={{
-                    style: {
-                        background: "rgba(10,10,10,0.94)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        color: "#f5f5f5",
-                        backdropFilter: "blur(20px)",
-                    },
-                }}
-            />
-            {platform === 'tv' && <TVApp />}
-            {platform === 'mobile' && <MobileApp />}
-            {platform === 'web' && <WebApp />}
-        </div>
-    </AuthProvider>
+    <div className="App">
+        <Toaster
+            theme="dark"
+            position="bottom-right"
+            toastOptions={{
+                style: {
+                    background: "rgba(10,10,10,0.94)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "#f5f5f5",
+                    backdropFilter: "blur(20px)",
+                },
+            }}
+        />
+        {platform === 'tv' && <TVApp />}
+        {platform === 'mobile' && <MobileApp />}
+        {platform === 'web' && <WebApp />}
+    </div>
   );
 }

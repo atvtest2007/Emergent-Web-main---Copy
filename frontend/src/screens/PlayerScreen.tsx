@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Capacitor, registerPlugin } from "@capacitor/core";
@@ -14,6 +15,7 @@ export default function PlayerScreen() {
     const [src, setSrc] = useState<string | null>(null);
     const [meta, setMeta] = useState({ title: "", poster: "" });
     const [initialPos, setInitialPos] = useState(0);
+    const [showResumePrompt, setShowResumePrompt] = useState(false);
     const lastSaveRef = useRef(0);
 
     const isLive = type === "live";
@@ -50,8 +52,9 @@ export default function PlayerScreen() {
                     try {
                         const all = await Progress.list();
                         const found = (all || []).find((p: any) => p.content_id === id);
-                        if (found?.position && found.progress < 0.95) {
+                        if (found?.position && found.progress < 0.95 && found.position > 5) {
                             setInitialPos(found.position);
+                            setShowResumePrompt(true);
                         }
                     } catch { /* ignore */ }
                 }
@@ -76,7 +79,7 @@ export default function PlayerScreen() {
     };
 
     useEffect(() => {
-        if (loading || !src || !Capacitor.isNativePlatform()) return;
+        if (loading || !src || !Capacitor.isNativePlatform() || showResumePrompt) return;
         
         let active = true;
         (async () => {
@@ -101,13 +104,49 @@ export default function PlayerScreen() {
         })();
 
         return () => { active = false; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [src, isLive, loading, initialPos]); // Add loading and initialPos dependencies
+    }, [src, isLive, loading, initialPos, showResumePrompt]); // Add loading, initialPos, showResumePrompt dependencies
 
-    if (loading || !src || Capacitor.isNativePlatform()) {
+    if (loading || !src || (Capacitor.isNativePlatform() && !showResumePrompt)) {
         return (
             <div className="absolute inset-0 bg-[#030608] flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-[#E50914]" />
+                <Loader2 className="w-10 h-10 animate-spin text-brand" />
+            </div>
+        );
+    }
+
+    if (showResumePrompt) {
+        return (
+            <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white animate-in fade-in duration-300">
+                <div className="bg-[#121212] border border-white/10 rounded-xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center">
+                    <h2 className="text-2xl font-display font-bold mb-3 tracking-tight">Resume Playback?</h2>
+                    <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                        You have previously watched this {type === "episode" ? "episode" : "movie"}. Would you like to resume from where you left off?
+                    </p>
+                    <div className="space-y-3 w-full">
+                        <button 
+                            onClick={() => setShowResumePrompt(false)} 
+                            className="w-full py-3 rounded-md bg-brand hover:bg-[#F40612] text-white font-semibold transition shadow-xl shadow-red-900/20"
+                            autoFocus
+                        >
+                            Resume Watching
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setInitialPos(0);
+                                setShowResumePrompt(false);
+                            }} 
+                            className="w-full py-3 rounded-md bg-white/10 hover:bg-white/20 text-white font-semibold transition"
+                        >
+                            Start Over
+                        </button>
+                        <button 
+                            onClick={() => nav(-1)} 
+                            className="w-full py-3 rounded-md bg-transparent hover:bg-white/5 text-zinc-400 font-semibold transition"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
             </div>
         );
     }

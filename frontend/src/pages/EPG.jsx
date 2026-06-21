@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Content } from "@/lib/api";
 import { Loader2, Radio, Play } from "lucide-react";
 
@@ -13,13 +13,7 @@ function startOfHour(d = new Date()) {
     return x;
 }
 
-function formatCatchupStart(dateObj) {
-    const pad = n => String(n).padStart(2, '0');
-    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}:${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`;
-}
-
 export default function EPG() {
-    const nav = useNavigate();
     const [loading, setLoading] = useState(true);
     const [channels, setChannels] = useState([]);
     const [epgMap, setEpgMap] = useState({});
@@ -64,7 +58,7 @@ export default function EPG() {
     return (
         <div className="px-6 lg:px-12 py-8 pt-12" data-testid="epg-page">
             <div className="mb-6">
-                <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2 flex items-center gap-2">
+                <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2 flex items-center gap-2">
                     <Radio className="w-3.5 h-3.5" /> Electronic Program Guide
                 </div>
                 <h1 className="font-display text-5xl font-black tracking-tighter">EPG Guide</h1>
@@ -72,7 +66,7 @@ export default function EPG() {
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center py-24"><Loader2 className="w-10 h-10 animate-spin text-[#E50914]" /></div>
+                <div className="flex items-center justify-center py-24"><Loader2 className="w-10 h-10 animate-spin text-brand" /></div>
             ) : channels.length === 0 ? (
                 <div className="text-center py-20 text-zinc-400">No channels to show.</div>
             ) : (
@@ -93,10 +87,10 @@ export default function EPG() {
                                 {/* Now line */}
                                 {nowOffset >= 0 && nowOffset <= HOUR_WIDTH * totalHours && (
                                     <div
-                                        className="absolute top-0 bottom-0 w-px bg-[#E50914] z-10 pointer-events-none"
+                                        className="absolute top-0 bottom-0 w-px bg-brand z-10 pointer-events-none"
                                         style={{ left: `${220 + nowOffset}px` }}
                                     >
-                                        <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-[#E50914]" />
+                                        <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-brand" />
                                     </div>
                                 )}
                                 {channels.map((c) => {
@@ -121,27 +115,12 @@ export default function EPG() {
                                                         const width = ((pe - ps) / (1000 * 60 * 60)) * HOUR_WIDTH - 2;
                                                         if (left + width < 0 || left > HOUR_WIDTH * totalHours) return null;
                                                         const isLive = now >= ps && now <= pe;
-                                                        const clampedWidth = width - Math.max(0, -left);
                                                         const clampedLeft = Math.max(0, left);
-                                                        
-                                                        const hasArchive = p.has_archive === 1 || p.has_archive === true;
-                                                        const isPast = now > ps;
-                                                        const durationMins = Math.round((pe - ps) / 60000);
-                                                        const canCatchup = hasArchive && isPast;
-
-                                                        const onClick = () => {
-                                                            if (isLive || !canCatchup) {
-                                                                nav(`/watch/live/${c.stream_id}`);
-                                                            } else {
-                                                                nav(`/watch/catchup/${c.stream_id}?start=${formatCatchupStart(ps)}&duration=${durationMins}`);
-                                                            }
-                                                        };
-
+                                                        const clampedWidth = width - Math.max(0, -left);
                                                         return (
                                                             <button
                                                                 key={p.id}
-                                                                onClick={onClick}
-                                                                className={`epg-program absolute top-2 bottom-2 rounded border text-left px-2.5 py-1 overflow-hidden transition-colors ${isLive ? "live" : "bg-white/[0.03] border-white/10 hover:bg-white/10"}`}
+                                                                className={`epg-program absolute top-2 bottom-2 rounded border text-left px-2.5 py-1 overflow-hidden ${isLive ? "live" : "bg-white/[0.03] border-white/10"}`}
                                                                 style={{ left: `${clampedLeft}px`, width: `${Math.max(80, clampedWidth)}px` }}
                                                                 title={`${p.title}\n${p.description}`}
                                                                 data-testid={`program-${p.id}`}
@@ -152,7 +131,7 @@ export default function EPG() {
                                                                 </div>
                                                                 {isLive && (
                                                                     <div className="absolute top-1 right-1 flex items-center gap-1">
-                                                                        <Play className="w-3 h-3 fill-[#E50914] text-[#E50914]" />
+                                                                        <Play className="w-3 h-3 fill-[var(--brand-primary)] text-brand" />
                                                                     </div>
                                                                 )}
                                                             </button>

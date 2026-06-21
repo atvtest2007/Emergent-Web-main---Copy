@@ -18,7 +18,7 @@ export default function SeriesDetailScreen() {
     (async () => {
       try {
         const [d, favs, progress] = await Promise.all([
-          Content.series(id),
+          Content.series(id).catch(() => null),
           Favorites.list().catch(() => []),
           Progress.list().catch(() => []),
         ]);
@@ -57,7 +57,7 @@ export default function SeriesDetailScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function SeriesDetailScreen() {
 
           {currentSeason?.episodes?.[0] && (
             <button onClick={() => navigate(`/watch/episode/${currentSeason.episodes[0].id}`)} className="w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2 mb-5"
-              style={{ background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)', boxShadow: '0 6px 20px rgba(229,9,20,0.3)' }}>
+              style={{ background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)', boxShadow: '0 6px 20px rgba(229,9,20,0.3)' }}>
               <Play size={16} fill="white" /> Play S{currentSeason.season_number} E{currentSeason.episodes[0].episode_num}
             </button>
           )}
@@ -138,7 +138,7 @@ export default function SeriesDetailScreen() {
                     onClick={() => setSeason(s.season_number)}
                     className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold"
                     style={{
-                      background: season === s.season_number ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                      background: season === s.season_number ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                       color: season === s.season_number ? '#fff' : '#64748b',
                       border: season === s.season_number ? 'none' : '1px solid #2A2A2A',
                     }}
@@ -176,7 +176,7 @@ export default function SeriesDetailScreen() {
                       
                       {epProgress > 0 && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
-                          <div className="h-full bg-[#E50914]" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
+                          <div className="h-full bg-brand" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
                         </div>
                       )}
                     </button>

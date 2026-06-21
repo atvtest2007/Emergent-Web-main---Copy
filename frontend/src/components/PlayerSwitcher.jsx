@@ -9,7 +9,7 @@ export default function PlayerSwitcher({ open, onOpenChange, value, onChange }) 
             <DialogContent className="bg-[#0a0a0a] border-white/10 text-zinc-100 max-w-md">
                 <DialogHeader>
                     <DialogTitle className="font-display text-2xl tracking-tight flex items-center gap-2">
-                        <Cpu className="w-5 h-5 text-[#E50914]" />
+                        <Cpu className="w-5 h-5 text-brand" />
                         Switch Player Engine
                     </DialogTitle>
                     <DialogDescription className="text-zinc-400">
@@ -29,7 +29,7 @@ export default function PlayerSwitcher({ open, onOpenChange, value, onChange }) 
                                 data-testid={`player-option-${opt.id}`}
                                 className={`flex items-start gap-3 p-4 rounded-md border text-left transition ${
                                     selected
-                                        ? "border-[#E50914] bg-[#E50914]/10"
+                                        ? "border-brand bg-brand/10"
                                         : "border-white/10 bg-[#121212] hover:border-white/30"
                                 }`}
                             >
@@ -37,7 +37,7 @@ export default function PlayerSwitcher({ open, onOpenChange, value, onChange }) 
                                     <div className="font-semibold">{opt.label}</div>
                                     <div className="text-xs text-zinc-400 mt-0.5">{opt.desc}</div>
                                 </div>
-                                {selected && <Check className="w-5 h-5 text-[#E50914]" />}
+                                {selected && <Check className="w-5 h-5 text-brand" />}
                             </button>
                         );
                     })}

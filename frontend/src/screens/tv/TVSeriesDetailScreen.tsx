@@ -18,7 +18,7 @@ export default function TVSeriesDetailScreen() {
     (async () => {
       try {
         const [d, favs, progress] = await Promise.all([
-          Content.series(id),
+          Content.series(id).catch(() => null),
           Favorites.list().catch(() => []),
           Progress.list().catch(() => []),
         ]);
@@ -57,7 +57,7 @@ export default function TVSeriesDetailScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-12 h-12 animate-spin text-[#E50914]" />
+        <Loader2 className="w-12 h-12 animate-spin text-brand" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function TVSeriesDetailScreen() {
         <div className="relative z-10 flex-1 flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           <div className="p-10 max-w-4xl">
             <button tabIndex={0} onClick={() => navigate(-1)} className="mb-6 flex items-center gap-2 text-zinc-400 hover:text-white transition group focus:outline-none">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 group-focus:ring-2 ring-[#E50914]">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 group-focus:ring-2 ring-brand">
                 <ArrowLeft size={18} />
               </div>
               <span className="font-semibold text-sm">Back to Series</span>
@@ -112,7 +112,7 @@ export default function TVSeriesDetailScreen() {
                   {data.genre.split(',')[0]}
                 </span>
               )}
-              <button tabIndex={0} onClick={toggleFav} className="ml-2 flex items-center gap-2 px-4 py-1.5 rounded-full font-semibold text-sm transition focus:outline-none focus:ring-2 ring-[#E50914] group"
+              <button tabIndex={0} onClick={toggleFav} className="ml-2 flex items-center gap-2 px-4 py-1.5 rounded-full font-semibold text-sm transition focus:outline-none focus:ring-2 ring-brand group"
                 style={{ background: isFav ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', color: isFav ? '#fca5a5' : '#fff' }}>
                 <Heart size={16} fill={isFav ? '#ef4444' : 'none'} style={{ color: isFav ? '#ef4444' : '#fff' }} />
                 {isFav ? 'Favorited' : 'Add to Favorites'}
@@ -130,7 +130,7 @@ export default function TVSeriesDetailScreen() {
                       onClick={() => setSeason(s.season_number)}
                       className="px-6 py-2.5 rounded-xl font-bold transition focus:outline-none focus:ring-2 ring-white/50"
                       style={{
-                        background: season === s.season_number ? 'linear-gradient(135deg, #E50914, #B80710)' : 'rgba(255,255,255,0.05)',
+                        background: season === s.season_number ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : 'rgba(255,255,255,0.05)',
                         color: season === s.season_number ? '#fff' : '#94a3b8',
                         border: season === s.season_number ? '1px solid transparent' : '1px solid rgba(255,255,255,0.1)',
                       }}
@@ -149,7 +149,7 @@ export default function TVSeriesDetailScreen() {
                         className="flex items-center gap-4 p-3 rounded-xl text-left relative overflow-hidden group focus:outline-none"
                         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)' }}
                       >
-                        <div className="flex items-center justify-center rounded-lg flex-shrink-0 font-bold text-lg bg-black/40 w-14 h-14 text-zinc-400 group-hover:bg-[#E50914] group-hover:text-white transition">
+                        <div className="flex items-center justify-center rounded-lg flex-shrink-0 font-bold text-lg bg-black/40 w-14 h-14 text-zinc-400 group-hover:bg-brand group-hover:text-white transition">
                           {ep.episode_num}
                         </div>
                         <div className="flex-1 min-w-0 pr-4">
@@ -159,10 +159,10 @@ export default function TVSeriesDetailScreen() {
                             <span className="text-sm text-zinc-500 font-medium">{ep.duration || 'Unknown'}</span>
                           </div>
                         </div>
-                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#E50914] group-focus:border-[#E50914] rounded-xl transition pointer-events-none" />
+                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-brand group-focus:border-brand rounded-xl transition pointer-events-none" />
                         {epProgress > 0 && (
                           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-                            <div className="h-full bg-[#E50914]" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
+                            <div className="h-full bg-brand" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
                           </div>
                         )}
                       </button>

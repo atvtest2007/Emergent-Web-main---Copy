@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "main": "public/electron.js",
   "dependencies": {
     "@capacitor/android": "^8.3.4",
     "@capacitor/core": "^8.3.4",
@@ -36,12 +36,13 @@
     "@radix-ui/react-tooltip": "^1.2.4",
     "@videojs/themes": "1.0.1",
     "axios": "^1.8.4",
+    "capacitor-video-player": "^6.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
-    "electron-is-dev": "^3.0.1",
+    "dotenv": "^17.4.2",
     "embla-carousel-react": "^8.6.0",
     "hls.js": "1.5.17",
     "input-otp": "^1.4.2",
@@ -54,6 +55,7 @@
     "react-resizable-panels": "^3.0.1",
     "react-router-dom": "^7.5.1",
     "react-scripts": "5.0.1",
+    "react-virtuoso": "^4.18.7",
     "recharts": "^3.6.0",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
@@ -62,42 +64,10 @@
     "video.js": "8.21.1",
     "zod": "^3.24.4"
   },
-  "main": "public/electron.js",
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test",
-    "electron:dev": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "yarn build && electron-builder"
-  },
-  "build": {
-    "appId": "com.maxxplayer.desktop",
-    "productName": "Maxx Player",
-    "directories": {
-      "buildResources": "public"
-    },
-    "files": [
-      "build/**/*",
-      "public/electron.js",
-      "!node_modules/**/*"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "mac": {
-      "target": [
-        "dmg"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ]
-    },
-    "npmRebuild": false
+    "test": "craco test"
   },
   "browserslist": {
     "production": [
@@ -111,6 +81,30 @@
       "last 1 safari version"
     ]
   },
+  "build": {
+    "appId": "com.maxxplayer.app",
+    "productName": "Maxx Player",
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "public/favicon.ico"
+    },
+    "extraFiles": [
+      {
+        "from": "../backend/dist/server.exe",
+        "to": "bin/server.exe"
+      },
+      {
+        "from": "build",
+        "to": "frontend"
+      }
+    ]
+  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@capacitor/cli": "^8.3.4",
@@ -121,10 +115,10 @@
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.20",
-    "concurrently": "^10.0.1",
+    "concurrently": "^10.0.3",
     "cross-env": "^10.1.0",
-    "electron": "^42.3.0",
-    "electron-builder": "^26.8.1",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
     "eslint": "9.23.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
@@ -135,5 +129,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^6.0.3",
     "wait-on": "^9.0.10"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

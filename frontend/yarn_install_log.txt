@@ -1,6 +1,0 @@
-yarn install v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-error @capacitor/cli@8.3.4: The engine "node" is incompatible with this module. Expected version ">=22.0.0". Got "20.20.2"
-error Found incompatible module.
-info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.

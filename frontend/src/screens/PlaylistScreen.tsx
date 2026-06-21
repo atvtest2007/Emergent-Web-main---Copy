@@ -24,7 +24,7 @@ export default function PlaylistScreen({ onNavigate }: Props) {
                   border: `1px solid ${pl.status === 'active' ? 'rgba(229,9,20,0.25)' : pl.status === 'syncing' ? 'rgba(251,191,36,0.25)' : 'rgba(239,68,68,0.25)'}`,
                 }}
               >
-                {pl.status === 'active' && <Wifi size={20} style={{ color: '#E50914' }} />}
+                {pl.status === 'active' && <Wifi size={20} style={{ color: 'var(--brand-primary)' }} />}
                 {pl.status === 'syncing' && <Loader size={20} style={{ color: '#f59e0b' }} />}
                 {pl.status === 'error' && <WifiOff size={20} style={{ color: '#ef4444' }} />}
               </div>
@@ -49,21 +49,21 @@ export default function PlaylistScreen({ onNavigate }: Props) {
 
         <div className="flex gap-2 mt-1">
           <button className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold"
-            style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: '#E50914' }}>
+            style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: 'var(--brand-primary)' }}>
             <RefreshCw size={16} /> Refresh All
           </button>
           <button className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold"
-            style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: '#E50914' }}>
+            style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: 'var(--brand-primary)' }}>
             <Plus size={16} /> Add Playlist
           </button>
         </div>
 
         <div className="rounded-2xl p-4 mt-1" style={{ background: 'rgba(229,9,20,0.06)', border: '1px solid rgba(229,9,20,0.15)' }}>
           <div className="flex items-start gap-3">
-            <CheckCircle2 size={18} style={{ color: '#E50914', flexShrink: 0, marginTop: 1 }} />
+            <CheckCircle2 size={18} style={{ color: 'var(--brand-primary)', flexShrink: 0, marginTop: 1 }} />
             <div>
               <p className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Manage via Portal</p>
-              <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Add and manage playlists at <span style={{ color: '#E50914' }}>my.maxxplayer.com</span></p>
+              <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Add and manage playlists at <span style={{ color: 'var(--brand-primary)' }}>my.maxxplayer.com</span></p>
             </div>
           </div>
         </div>

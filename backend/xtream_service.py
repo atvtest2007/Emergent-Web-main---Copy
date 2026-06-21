@@ -561,7 +561,10 @@ class XtreamClient:
         return f"{self.server}/player_api.php?{urlencode(params)}"
 
     async def _get(self, url: str) -> Any:
-        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+        headers = {
+            "User-Agent": "VLC/3.0.9 LibVLC/3.0.9"
+        }
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True, headers=headers) as client:
             r = await client.get(url)
             r.raise_for_status()
             try:
@@ -605,6 +608,3 @@ class XtreamClient:
 
     def series_stream_url(self, episode_id: Any, ext: str = "mp4") -> str:
         return f"{self.server}/series/{self.username}/{self.password}/{episode_id}.{ext}"
-
-    def timeshift_stream_url(self, stream_id: Any, start_time: str, duration: int, ext: str = "m3u8") -> str:
-        return f"{self.server}/timeshift/{self.username}/{self.password}/{duration}/{start_time}/{stream_id}.{ext}"

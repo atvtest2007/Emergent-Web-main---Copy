@@ -17,8 +17,8 @@ export default function MovieDetails() {
             setLoading(true);
             try {
                 const [m, favs] = await Promise.all([
-                    Content.movie(id),
-                    Favorites.list().catch(() => []),
+                    Content.movie(id).catch(() => null),
+                    Favorites.list().catch(() => [])
                 ]);
                 setMovie(m);
                 setIsFav((favs || []).some((f) => f.content_id === id && (f.content_type === "movie" || f.content_type === "vod")));
@@ -31,14 +31,20 @@ export default function MovieDetails() {
     const toggleFav = async () => {
         if (!movie) return;
         if (isFav) {
-            await Favorites.remove("movie", id);
+            await Favorites.remove("vod", id);
             setIsFav(false);
             toast.info("Removed from favorites");
         } else {
             await Favorites.add({
-                content_type: "movie",
+                content_type: "vod",
                 content_id: id,
-                content_data: { name: movie.name || movie.title, stream_icon: movie.stream_icon, year: movie.year, rating: movie.rating, genre: movie.genre },
+                content_data: { 
+                    name: movie.name || movie.title || movie.info?.name, 
+                    stream_icon: movie.stream_icon || movie.info?.movie_image || movie.info?.cover, 
+                    year: movie.year || movie.info?.year, 
+                    rating: movie.rating || movie.info?.rating, 
+                    genre: movie.genre || movie.info?.genre 
+                },
             });
             setIsFav(true);
             toast.success("Added to favorites");
@@ -46,7 +52,7 @@ export default function MovieDetails() {
     };
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#E50914]" /></div>;
+        return <div className="h-full min-h-[80vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-brand" /></div>;
     }
     if (!movie) {
         return <div className="px-12 py-20 text-zinc-400">Movie not found.</div>;
@@ -69,7 +75,7 @@ export default function MovieDetails() {
                     <div className="flex gap-8 items-end">
                         <img src={poster} alt={title} className="hidden md:block w-44 lg:w-56 rounded-md shadow-2xl shadow-black/60 border border-white/10" />
                         <div className="animate-fade-up">
-                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2">Movie</div>
+                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2">Movie</div>
                             <h1 className="font-display text-4xl lg:text-6xl font-black tracking-tighter leading-[0.95]">{title}</h1>
                             <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-zinc-300">
                                 {movie.year && <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-zinc-500" />{movie.year}</span>}
@@ -84,11 +90,16 @@ export default function MovieDetails() {
 
             <div className="px-6 lg:px-12 max-w-7xl mx-auto -mt-4 relative z-10 pb-16">
                 <div className="flex flex-wrap gap-3 mb-8">
-                    <Link to={`/watch/vod/${id}`} className="inline-flex items-center gap-2 px-7 py-3 rounded-md bg-[#E50914] hover:bg-[#F40612] font-semibold transition shadow-xl shadow-red-900/30" data-testid="movie-play-btn">
+                    <Link 
+                        to={`/watch/vod/${id}`} 
+                        state={{ meta: { title: title, poster: poster || backdrop } }}
+                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-md bg-brand hover:bg-[#F40612] font-semibold transition shadow-xl shadow-red-900/30" 
+                        data-testid="movie-play-btn"
+                    >
                         <Play className="w-5 h-5 fill-white" /> Play
                     </Link>
-                    <button onClick={toggleFav} className={`inline-flex items-center gap-2 px-5 py-3 rounded-md border font-semibold transition ${isFav ? "bg-[#E50914]/20 border-[#E50914] text-white" : "bg-white/5 border-white/10 hover:bg-white/10 text-zinc-200"}`} data-testid="movie-favorite-btn">
-                        <Heart className={`w-5 h-5 ${isFav ? "fill-[#E50914] text-[#E50914]" : ""}`} />
+                    <button onClick={toggleFav} className={`inline-flex items-center gap-2 px-5 py-3 rounded-md border font-semibold transition ${isFav ? "bg-brand/20 border-brand text-white" : "bg-white/5 border-white/10 hover:bg-white/10 text-zinc-200"}`} data-testid="movie-favorite-btn">
+                        <Heart className={`w-5 h-5 ${isFav ? "fill-[var(--brand-primary)] text-brand" : ""}`} />
                         {isFav ? "Favorited" : "Favorite"}
                     </button>
                     {movie.trailer_url && (

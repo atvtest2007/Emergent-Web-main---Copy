@@ -3,27 +3,13 @@ import { Content } from "@/lib/api";
 import PosterCard from "@/components/PosterCard";
 import ChannelCard from "@/components/ChannelCard";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, Loader2, Mic, Clock, Trash2, Sparkles } from "lucide-react";
+import { Search as SearchIcon, Loader2, Mic } from "lucide-react";
 import { toast } from "sonner";
-import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function SearchPage() {
     const [q, setQ] = useState("");
     const [results, setResults] = useState({ live: [], movies: [], series: [] });
     const [loading, setLoading] = useState(false);
-    const [history, setHistory] = useState([]);
-    const [recs, setRecs] = useState([]);
-    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
-
-    useEffect(() => {
-        Content.searchHistory().then(setHistory).catch(() => {});
-        Content.recommendations().then(setRecs).catch(() => {});
-    }, []);
-
-    const clearHistory = async () => {
-        await Content.clearSearchHistory();
-        setHistory([]);
-    };
 
     useEffect(() => {
         if (!q.trim()) {
@@ -35,13 +21,12 @@ export default function SearchPage() {
             try {
                 const r = await Content.search(q.trim());
                 setResults(r || { live: [], movies: [], series: [] });
-                Content.searchHistory().then(setHistory).catch(() => {});
             } catch {
                 setResults({ live: [], movies: [], series: [] });
             } finally {
                 setLoading(false);
             }
-        }, 500);
+        }, 300);
         return () => clearTimeout(t);
     }, [q]);
 
@@ -61,9 +46,9 @@ export default function SearchPage() {
     const totalResults = results.live.length + results.movies.length + results.series.length;
 
     return (
-        <div className="px-6 lg:px-12 py-8 pt-12" data-testid="search-page">
+        <div className="px-6 md:px-12 2xl:px-24 4xl:px-32 5xl:px-48 uw:px-64 py-8 pt-12 4xl:py-16 4xl:pt-20 h-full min-h-[80vh]" data-testid="search-page">
             <div className="mb-6">
-                <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2">Discover</div>
+                <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2">Discover</div>
                 <h1 className="font-display text-5xl lg:text-6xl font-black tracking-tighter">Search</h1>
             </div>
             <div className="relative max-w-2xl mb-10">
@@ -73,7 +58,7 @@ export default function SearchPage() {
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Search channels, movies, series..."
-                    className="pl-12 pr-12 h-14 text-lg bg-[#0a0a0a] border-white/10 focus:border-[#E50914] text-zinc-100"
+                    className="pl-12 pr-12 h-14 text-lg bg-[#0a0a0a] border-white/10 focus:border-brand text-zinc-100"
                     data-testid="search-input"
                 />
                 <button onClick={startVoice} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center" data-testid="voice-search-btn" title="Voice search">
@@ -81,77 +66,36 @@ export default function SearchPage() {
                 </button>
             </div>
 
-            {loading && <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />}
+            {loading && <Loader2 className="w-8 h-8 animate-spin text-brand" />}
 
             {!loading && q && totalResults === 0 && (
                 <div className="text-zinc-400">No results for "{q}".</div>
             )}
 
-            {!loading && !q.trim() && (
-                <div>
-                    {history.length > 0 && (
-                        <div className="mb-10">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-display text-xl font-bold flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-zinc-400" /> Recent Searches
-                                </h2>
-                                <button onClick={clearHistory} className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition">
-                                    <Trash2 className="w-3.5 h-3.5" /> Clear
-                                </button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {history.map((h, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setQ(h)}
-                                        className="px-4 py-2 rounded-full glass border border-white/10 hover:bg-white/10 text-sm font-medium transition"
-                                    >
-                                        {h}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {recs.length > 0 && (
-                        <div>
-                            <h2 className="font-display text-xl font-bold flex items-center gap-2 mb-4">
-                                <Sparkles className="w-5 h-5 text-[#E50914]" /> Recommended for You
-                            </h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                {recs.map((it) => (
-                                    <PosterCard key={it.stream_id || it.series_id} item={it} type={it.stream_id ? "movie" : "series"} isLocked={isCategoryLocked(it.category_name)} onUnlock={unlock} />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
             {results.movies.length > 0 && (
                 <section className="mb-10">
                     <h2 className="font-display text-2xl font-bold mb-4">Movies <span className="text-zinc-500 text-base">({results.movies.length})</span></h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {results.movies.map((m) => <PosterCard key={m.stream_id} item={m} type="movie" isLocked={isCategoryLocked(m.category_name)} onUnlock={unlock} />)}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] 2xl:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] 3xl:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] 4xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 5xl:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] uw:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-4 4xl:gap-6">
+                        {results.movies.map((m) => <PosterCard key={m.stream_id} item={m} type="movie" isGrid={true} />)}
                     </div>
                 </section>
             )}
             {results.series.length > 0 && (
                 <section className="mb-10">
                     <h2 className="font-display text-2xl font-bold mb-4">Series <span className="text-zinc-500 text-base">({results.series.length})</span></h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {results.series.map((s) => <PosterCard key={s.series_id} item={s} type="series" isLocked={isCategoryLocked(s.category_name)} onUnlock={unlock} />)}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] 2xl:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] 3xl:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] 4xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 5xl:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] uw:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-4 4xl:gap-6">
+                        {results.series.map((s) => <PosterCard key={s.series_id} item={s} type="series" isGrid={true} />)}
                     </div>
                 </section>
             )}
             {results.live.length > 0 && (
                 <section className="mb-10">
                     <h2 className="font-display text-2xl font-bold mb-4">Live Channels <span className="text-zinc-500 text-base">({results.live.length})</span></h2>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {results.live.map((c) => <ChannelCard key={c.stream_id} channel={c} isLocked={isCategoryLocked(c.category_name)} onUnlock={unlock} />)}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 3xl:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] 4xl:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] 5xl:grid-cols-[repeat(auto-fill,minmax(500px,1fr))] gap-4 4xl:gap-6">
+                        {results.live.map((c) => <ChannelCard key={c.stream_id} channel={c} />)}
                     </div>
                 </section>
             )}
-            {renderModal()}
         </div>
     );
 }

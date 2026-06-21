@@ -50,7 +50,7 @@ export default function TVSideNav({ active }: TVSideNavProps) {
       <div className="flex items-center gap-3 px-4 py-5 flex-shrink-0">
         <div
           className="flex items-center justify-center rounded-xl flex-shrink-0"
-          style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 0 14px rgba(229,9,20,0.4)' }}
+          style={{ width: 36, height: 36, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 0 14px rgba(229,9,20,0.4)' }}
         >
           <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
             <path d="M12 8L38 24L12 40V8Z" fill="white" />
@@ -59,7 +59,7 @@ export default function TVSideNav({ active }: TVSideNavProps) {
         </div>
         {!collapsed && (
           <span className="text-base font-black" style={{ color: '#f8fafc' }}>
-            Maxx<span style={{ color: '#E50914' }}>Player</span>
+            Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
           </span>
         )}
       </div>
@@ -74,7 +74,7 @@ export default function TVSideNav({ active }: TVSideNavProps) {
           return (
             <button tabIndex={0} key={id}
               onClick={() => navigate(path)}
-              className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-[#E50914] text-left w-full"
+              className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-brand text-left w-full"
               style={{
                 padding: collapsed ? '10px 14px' : '10px 12px',
                 background: isActive ? 'linear-gradient(135deg, rgba(229,9,20,0.2), rgba(2,132,199,0.1))' : 'transparent',
@@ -83,7 +83,7 @@ export default function TVSideNav({ active }: TVSideNavProps) {
               }}
             >
               <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 22, height: 22 }}>
-                <Icon size={18} style={{ color: isActive ? '#E50914' : '#475569' }} />
+                <Icon size={18} style={{ color: isActive ? 'var(--brand-primary)' : '#475569' }} />
               </div>
               {!collapsed && (
                 <span className="text-sm font-semibold" style={{ color: isActive ? '#e2e8f0' : '#64748b' }}>
@@ -91,7 +91,7 @@ export default function TVSideNav({ active }: TVSideNavProps) {
                 </span>
               )}
               {isActive && !collapsed && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: '#E50914' }} />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--brand-primary)' }} />
               )}
             </button>
           );
@@ -107,19 +107,19 @@ export default function TVSideNav({ active }: TVSideNavProps) {
           const isActive = active === id;
           return (
             <button tabIndex={0} key={id} onClick={() => navigate(path)}
-              className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-[#E50914] w-full"
+              className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-brand w-full"
               style={{
                 padding: collapsed ? '10px 14px' : '10px 12px',
                 background: isActive ? 'rgba(229,9,20,0.15)' : 'transparent',
                 justifyContent: collapsed ? 'center' : 'flex-start',
               }}
             >
-              <Icon size={18} style={{ color: isActive ? '#E50914' : '#475569' }} />
+              <Icon size={18} style={{ color: isActive ? 'var(--brand-primary)' : '#475569' }} />
               {!collapsed && <span className="text-sm font-semibold" style={{ color: isActive ? '#e2e8f0' : '#64748b' }}>{label}</span>}
             </button>
           );
         })}
-        <button tabIndex={0} className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-[#E50914] w-full group focus:outline-none"
+        <button tabIndex={0} className="flex items-center gap-3 rounded-xl focus:bg-white/10 focus:ring-2 focus:ring-brand w-full group focus:outline-none"
           style={{
             padding: collapsed ? '10px 14px' : '10px 12px',
             justifyContent: collapsed ? 'center' : 'flex-start',

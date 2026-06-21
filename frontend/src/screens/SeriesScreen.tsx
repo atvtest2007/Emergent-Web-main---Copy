@@ -40,7 +40,7 @@ export default function SeriesScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -71,7 +71,7 @@ export default function SeriesScreen() {
             onClick={() => setCat("all")}
             className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold"
             style={{
-              background: cat === "all" ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+              background: cat === "all" ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
               color: cat === "all" ? '#fff' : '#64748b',
               border: cat === "all" ? 'none' : '1px solid #2A2A2A',
               boxShadow: cat === "all" ? '0 4px 12px rgba(229,9,20,0.3)' : 'none',
@@ -87,7 +87,7 @@ export default function SeriesScreen() {
                 onClick={() => setCat(c.category_id)}
                 className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold"
                 style={{
-                  background: isSelected ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                  background: isSelected ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                   color: isSelected ? '#fff' : '#64748b',
                   border: isSelected ? 'none' : '1px solid #2A2A2A',
                   boxShadow: isSelected ? '0 4px 12px rgba(229,9,20,0.3)' : 'none',
@@ -110,7 +110,7 @@ export default function SeriesScreen() {
               className="relative rounded-xl overflow-hidden text-left"
               style={{ aspectRatio: '2/3', border: '1px solid #2A2A2A' }}
             >
-              <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"} />
+              <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }} />
               <div className="absolute inset-x-0 bottom-0 p-2 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}>
                 <p className="text-xs font-semibold text-white leading-tight truncate">{s.name}</p>
                 {s.rating && (

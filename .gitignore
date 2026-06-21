@@ -107,3 +107,11 @@ credentials.json
 
 # Local Netlify folder
 .netlify
+
+# Build and data artifacts
+backend/maxx.sqlite
+WebView2Setup.exe
+backend/build/
+backend/dist/
+scratch/
+diff.json

@@ -16,7 +16,7 @@ export default function MovieDetailScreen() {
     (async () => {
       try {
         const [m, favs] = await Promise.all([
-          Content.movie(id),
+          Content.movie(id).catch(() => null),
           Favorites.list().catch(() => []),
         ]);
         setMovie(m);
@@ -45,7 +45,7 @@ export default function MovieDetailScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function MovieDetailScreen() {
           src={backdrop || "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=450&dpr=1"}
           alt={title}
           className="w-full h-full object-cover"
-          onError={(e) => { e.currentTarget.src = poster || "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=450&dpr=1" }}
+          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = poster || "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=450&dpr=1" }}
         />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 35%, rgba(8,12,20,0.7) 70%, #030608 100%)' }} />
 
@@ -153,7 +153,7 @@ export default function MovieDetailScreen() {
           {/* Play button */}
           <button onClick={() => navigate(`/watch/movie/${id}`)}
             className="w-full py-4 rounded-2xl font-black text-white flex items-center justify-center gap-2 mb-5"
-            style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 8px 24px rgba(229,9,20,0.35)', fontSize: 15 }}>
+            style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 8px 24px rgba(229,9,20,0.35)', fontSize: 15 }}>
             <Play size={17} fill="white" /> Play Movie
           </button>
 

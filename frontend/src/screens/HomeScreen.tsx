@@ -5,7 +5,7 @@ import BottomNav from '../components/BottomNav';
 import { Content, Progress, Playlists, Account } from '@/lib/api';
 
 const quickLinks = [
-  { label: 'Live TV', icon: Tv, path: '/live', color: '#E50914', bg: 'rgba(229,9,20,0.12)' },
+  { label: 'Live TV', icon: Tv, path: '/live', color: 'var(--brand-primary)', bg: 'rgba(229,9,20,0.12)' },
   { label: 'Movies', icon: Film, path: '/movies', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
   { label: 'Series', icon: Monitor, path: '/series', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
   { label: 'EPG', icon: Calendar, path: '/epg', color: '#e879f9', bg: 'rgba(232,121,249,0.12)' },
@@ -18,7 +18,7 @@ function Section({ title, onMore, children }: { title: string; onMore: () => voi
     <div className="mb-6">
       <div className="flex items-center justify-between px-5 mb-3">
         <h2 className="text-base font-bold" style={{ color: '#f1f5f9' }}>{title}</h2>
-        <button onClick={onMore} className="flex items-center gap-1 text-xs font-semibold" style={{ color: '#E50914' }}>
+        <button onClick={onMore} className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--brand-primary)' }}>
           See all <ChevronRight size={14} />
         </button>
       </div>
@@ -62,7 +62,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#E50914]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function HomeScreen() {
         <div className="flex items-center gap-3">
           <div
             className="flex items-center justify-center rounded-2xl flex-shrink-0"
-            style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 0 16px rgba(229,9,20,0.4)' }}
+            style={{ width: 40, height: 40, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 0 16px rgba(229,9,20,0.4)' }}
           >
             <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
               <path d="M12 8L38 24L12 40V8Z" fill="white" />
@@ -90,7 +90,7 @@ export default function HomeScreen() {
           <div>
             <p className="text-xs font-medium leading-none" style={{ color: '#475569' }}>Welcome back</p>
             <h1 className="text-lg font-black leading-tight" style={{ color: '#f8fafc' }}>
-              Maxx<span style={{ color: '#E50914' }}>Player</span>
+              Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
             </h1>
           </div>
         </div>
@@ -122,12 +122,12 @@ export default function HomeScreen() {
                 src={featured.stream_icon || featured.cover || "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=400&dpr=1"}
                 alt={featured.name}
                 className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=400&dpr=1" }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=700&h=400&dpr=1" }}
               />
               <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.1) 100%)' }} />
               <div className="absolute inset-0 flex flex-col justify-between p-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2.5 py-1 rounded-full font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', fontSize: 10 }}>
+                  <span className="text-xs px-2.5 py-1 rounded-full font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', fontSize: 10 }}>
                     FEATURED
                   </span>
                 </div>
@@ -137,7 +137,7 @@ export default function HomeScreen() {
                     <button
                       onClick={() => navigate(`/watch/movie/${featured.stream_id}`)}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm"
-                      style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', boxShadow: '0 4px 16px rgba(229,9,20,0.4)' }}
+                      style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', boxShadow: '0 4px 16px rgba(229,9,20,0.4)' }}
                     >
                       <Play size={13} fill="white" /> Play Now
                     </button>
@@ -183,7 +183,7 @@ export default function HomeScreen() {
                 <div className="w-2 h-2 rounded-full" style={{ background: '#ef4444', boxShadow: '0 0 8px rgba(239,68,68,0.8)' }} />
                 <h2 className="text-base font-bold" style={{ color: '#f1f5f9' }}>Live Now</h2>
               </div>
-              <button onClick={() => navigate('/live')} className="flex items-center gap-1 text-xs font-semibold" style={{ color: '#E50914' }}>
+              <button onClick={() => navigate('/live')} className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--brand-primary)' }}>
                 All channels <ChevronRight size={14} />
               </button>
             </div>
@@ -202,7 +202,7 @@ export default function HomeScreen() {
                     <p className="text-sm font-semibold truncate" style={{ color: '#f1f5f9' }}>{ch.name}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <div className="flex items-center justify-center rounded-lg" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #E50914, #B80710)' }}>
+                    <div className="flex items-center justify-center rounded-lg" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)' }}>
                       <Play size={13} fill="white" style={{ color: 'white' }} />
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export default function HomeScreen() {
                     <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
                       <p className="text-xs font-semibold text-white truncate mb-1">{m.name}</p>
                       <div className="h-1 rounded-full w-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, (c.progress || 0) * 100)}%`, background: '#E50914' }} />
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, (c.progress || 0) * 100)}%`, background: 'var(--brand-primary)' }} />
                       </div>
                     </div>
                     <div className="absolute top-2 right-2 flex items-center justify-center rounded-full" style={{ width: 26, height: 26, background: 'rgba(229,9,20,0.9)' }}>
@@ -255,7 +255,7 @@ export default function HomeScreen() {
                   className="flex-shrink-0 rounded-2xl overflow-hidden relative"
                   style={{ width: 110, height: 165, border: '1px solid #2A2A2A', flexShrink: 0 }}
                 >
-                  <img src={m.stream_icon} alt={m.name} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"} />
+                  <img src={m.stream_icon} alt={m.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }} />
                   <div className="absolute inset-x-0 bottom-0 p-2 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}>
                     <p className="text-xs font-semibold text-white leading-tight truncate">{m.name}</p>
                     {m.rating && (
@@ -282,7 +282,7 @@ export default function HomeScreen() {
                   className="flex-shrink-0 rounded-2xl overflow-hidden relative"
                   style={{ width: 110, height: 165, border: '1px solid #2A2A2A', flexShrink: 0 }}
                 >
-                  <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"} />
+                  <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }} />
                   <div className="absolute inset-x-0 bottom-0 p-2 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}>
                     <p className="text-xs font-semibold text-white leading-tight truncate">{s.name}</p>
                   </div>

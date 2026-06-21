@@ -80,7 +80,7 @@ export default function LoginScreen() {
   const activateSaved = async (id: string) => {
     await Playlists.activate(id);
     toast.success("Account switched");
-    navigate("/home");
+    window.location.href = "/home";
   };
 
   const removeSaved = async (id: string) => {
@@ -98,14 +98,14 @@ export default function LoginScreen() {
       <div className="flex flex-col items-center pt-20 pb-6 px-6">
         <div
           className="flex items-center justify-center rounded-2xl mb-4"
-          style={{ width: 64, height: 64, background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)', boxShadow: '0 0 24px rgba(229,9,20,0.35)' }}
+          style={{ width: 64, height: 64, background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)', boxShadow: '0 0 24px rgba(229,9,20,0.35)' }}
         >
           <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
             <path d="M12 8L38 24L12 40V8Z" fill="white" />
             <circle cx="36" cy="12" r="5" fill="rgba(255,255,255,0.6)" />
           </svg>
         </div>
-        <h1 className="text-2xl font-black" style={{ color: '#f8fafc' }}>Maxx<span style={{ color: '#E50914' }}>Player</span></h1>
+        <h1 className="text-2xl font-black" style={{ color: '#f8fafc' }}>Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span></h1>
         <p className="text-sm mt-1" style={{ color: '#64748b' }}>Sign in to start streaming</p>
       </div>
 
@@ -114,7 +114,7 @@ export default function LoginScreen() {
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
               style={{
-                background: tab === t.id ? 'linear-gradient(135deg, #E50914, #B80710)' : 'transparent',
+                background: tab === t.id ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : 'transparent',
                 color: tab === t.id ? '#fff' : '#64748b',
                 boxShadow: tab === t.id ? '0 4px 12px rgba(229,9,20,0.3)' : 'none',
               }}
@@ -140,10 +140,10 @@ export default function LoginScreen() {
         {tab === 'activation' && (
           <div className="flex flex-col items-center gap-4 py-2">
             <div className="flex items-center justify-center rounded-2xl" style={{ width: 72, height: 72, background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.2)' }}>
-              <Tv2 size={32} style={{ color: '#E50914' }} />
+              <Tv2 size={32} style={{ color: 'var(--brand-primary)' }} />
             </div>
             <p className="text-sm font-medium text-center" style={{ color: '#94a3b8' }}>
-              Visit <span style={{ color: '#E50914' }}>my.maxxplayer.com</span> to get your activation code
+              Visit <span style={{ color: 'var(--brand-primary)' }}>my.maxxplayer.com</span> to get your activation code
             </p>
             <div className="w-full"><InputField label="Activation Code" placeholder="e.g. ABC-123-XYZ" /></div>
           </div>
@@ -153,7 +153,7 @@ export default function LoginScreen() {
           onClick={handleSubmit}
           disabled={loading}
           className="w-full py-4 rounded-2xl font-bold text-white text-base mt-2 flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)', boxShadow: '0 8px 24px rgba(229,9,20,0.35)' }}
+          style={{ background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)', boxShadow: '0 8px 24px rgba(229,9,20,0.35)' }}
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
             <>
@@ -170,7 +170,7 @@ export default function LoginScreen() {
         </div>
 
         <button className="w-full py-3.5 rounded-2xl font-semibold text-sm"
-          style={{ border: '1px solid rgba(229,9,20,0.25)', color: '#E50914', background: 'rgba(229,9,20,0.05)' }}>
+          style={{ border: '1px solid rgba(229,9,20,0.25)', color: 'var(--brand-primary)', background: 'rgba(229,9,20,0.05)' }}>
           Register at my.maxxplayer.com
         </button>
 
@@ -185,7 +185,7 @@ export default function LoginScreen() {
                     <p className="text-xs truncate" style={{ color: '#64748b' }}>{p.type.toUpperCase()}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => activateSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: '#E50914' }}>
+                    <button onClick={() => activateSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: 'var(--brand-primary)' }}>
                       <Play size={14} className="text-white" />
                     </button>
                     <button onClick={() => removeSaved(p.id)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>

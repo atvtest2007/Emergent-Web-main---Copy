@@ -103,7 +103,7 @@ export default function Login() {
     const activate = async (id) => {
         await Playlists.activate(id);
         toast.success("Account switched");
-        nav("/home");
+        window.location.href = "/home";
     };
 
     const remove = async (id) => {
@@ -120,7 +120,7 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden" data-testid="login-page">
+        <div className="h-[100dvh] relative overflow-hidden" data-testid="login-page">
             {/* Cinematic background */}
             <img
                 src="https://images.unsplash.com/photo-1622730000579-e6bde344d6a4?w=2400&q=80"
@@ -130,40 +130,40 @@ export default function Login() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#050505] via-[#050505]/85 to-[#050505]/40" />
             <div className="absolute inset-0 hero-mask" />
 
-            <div className="relative z-10 min-h-screen flex flex-col">
+            <div className="relative z-10 h-full flex flex-col overflow-y-auto thin-scroll">
                 {/* Top brand */}
-                <header className="px-6 lg:px-12 py-6 flex items-center justify-between">
+                <header className="px-6 lg:px-12 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-md bg-gradient-to-br from-[#E50914] to-[#7a040a] flex items-center justify-center shadow-xl shadow-red-900/40">
+                        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-[var(--brand-primary)] to-[#7a040a] flex items-center justify-center shadow-xl shadow-red-900/40">
                             <span className="font-display font-black text-white text-xl">M</span>
                         </div>
                         <div>
-                            <div className="font-display font-black text-2xl tracking-tight">MAXX<span className="text-[#E50914]">.</span></div>
+                            <div className="font-display font-black text-2xl tracking-tight">MAXX<span className="text-brand">.</span></div>
                             <div className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 font-bold">Premium OTT Player</div>
                         </div>
                     </div>
                     <button
                         onClick={loadDemo}
                         data-testid="demo-mode-btn"
-                        className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-md glass border border-white/10 hover:border-[#E50914]/40 transition text-sm"
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-md glass border border-white/10 hover:border-brand/40 transition text-sm"
                     >
-                        <Sparkles className="w-4 h-4 text-[#E50914]" />
+                        <Sparkles className="w-4 h-4 text-brand" />
                         Try Demo Library
                     </button>
                 </header>
 
-                <div className="flex-1 flex items-center px-6 lg:px-12 py-10">
-                    <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+                <div className="flex-1 flex items-center px-6 lg:px-12 py-2">
+                    <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
                         {/* Left — copy */}
                         <div className="animate-fade-up">
-                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-4">
+                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2">
                                 Cinema in your browser
                             </div>
-                            <h1 className="font-display text-5xl lg:text-7xl font-black leading-[0.95] tracking-tighter mb-6">
+                            <h1 className="font-display text-4xl lg:text-6xl font-black leading-[0.95] tracking-tighter mb-4">
                                 Your IPTV, <br />
-                                <span className="text-[#E50914]">unleashed.</span>
+                                <span className="text-brand">unleashed.</span>
                             </h1>
-                            <p className="text-zinc-300 text-base lg:text-lg leading-relaxed max-w-xl mb-8">
+                            <p className="text-zinc-300 text-sm lg:text-base leading-relaxed max-w-xl mb-6">
                                 Maxx Player is a premium OTT streaming experience. Sign in with your Xtream Codes account, upload an M3U playlist, or explore our curated demo library.
                             </p>
                             <ul className="space-y-2 text-sm text-zinc-400">
@@ -174,7 +174,7 @@ export default function Login() {
                                     "Picture-in-Picture, casting, mini-player, favorites",
                                 ].map((t) => (
                                     <li key={t} className="flex items-center gap-3">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#E50914]" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-brand" />
                                         {t}
                                     </li>
                                 ))}
@@ -182,10 +182,10 @@ export default function Login() {
                         </div>
 
                         {/* Right — form card */}
-                        <Card className="glass-strong border-white/10 p-6 lg:p-8 animate-fade-up" data-testid="login-card">
-                            <div className="mb-6">
-                                <div className="text-xs tracking-[0.3em] uppercase text-zinc-400 font-bold mb-2">Connect Playlist</div>
-                                <h2 className="font-display text-3xl font-bold tracking-tight">Add a Playlist</h2>
+                        <Card className="glass-strong border-white/10 p-5 lg:p-6 animate-fade-up" data-testid="login-card">
+                            <div className="mb-4">
+                                <div className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 font-bold mb-1">Connect Playlist</div>
+                                <h2 className="font-display text-2xl font-bold tracking-tight">Sign in to Maxx</h2>
                             </div>
 
                             <Tabs value={tab} onValueChange={setTab}>
@@ -205,7 +205,7 @@ export default function Login() {
                                                 value={plName}
                                                 onChange={(e) => setPlName(e.target.value)}
                                                 placeholder="My IPTV Account"
-                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                             />
                                         </div>
                                         <div>
@@ -215,7 +215,7 @@ export default function Login() {
                                                 value={server}
                                                 onChange={(e) => setServer(e.target.value)}
                                                 placeholder="http://your-iptv-server.tld:port"
-                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                                 required
                                             />
                                         </div>
@@ -226,7 +226,7 @@ export default function Login() {
                                                     data-testid="xtream-user"
                                                     value={user}
                                                     onChange={(e) => setUser(e.target.value)}
-                                                    className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                    className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                                     required
                                                 />
                                             </div>
@@ -237,7 +237,7 @@ export default function Login() {
                                                     type="password"
                                                     value={pass}
                                                     onChange={(e) => setPass(e.target.value)}
-                                                    className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                    className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                                     required
                                                 />
                                             </div>
@@ -249,7 +249,7 @@ export default function Login() {
                                             </div>
                                             <Switch checked={autoConnect} onCheckedChange={setAutoConnect} data-testid="xtream-autoconnect" />
                                         </div>
-                                        <Button type="submit" disabled={loading} className="w-full bg-[#E50914] hover:bg-[#F40612] text-white h-11 font-semibold" data-testid="xtream-submit">
+                                        <Button type="submit" disabled={loading} className="w-full bg-brand hover:bg-[#F40612] text-white h-10 font-semibold" data-testid="xtream-submit">
                                             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
                                             Connect
                                         </Button>
@@ -266,7 +266,7 @@ export default function Login() {
                                                 value={m3uName}
                                                 onChange={(e) => setM3uName(e.target.value)}
                                                 placeholder="My M3U Playlist"
-                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                             />
                                         </div>
                                         <div>
@@ -276,7 +276,7 @@ export default function Login() {
                                                 value={m3uUrl}
                                                 onChange={(e) => setM3uUrl(e.target.value)}
                                                 placeholder="https://example.com/playlist.m3u8"
-                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                                                className="mt-1.5 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                                             />
                                         </div>
                                         <div className="relative text-center text-xs uppercase tracking-wider text-zinc-500">
@@ -287,14 +287,14 @@ export default function Login() {
                                             accept=".m3u,.m3u8,text/plain"
                                             onChange={onFile}
                                             data-testid="m3u-file"
-                                            className="block w-full text-sm text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#E50914] file:text-white file:font-semibold hover:file:bg-[#F40612]"
+                                            className="block w-full text-sm text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-brand file:text-white file:font-semibold hover:file:bg-[#F40612]"
                                         />
                                         {m3uContent && (
-                                            <div className="text-xs text-zinc-400">
+                                            <div className="text-[10px] text-zinc-400">
                                                 Loaded {m3uContent.split("\n").length} lines.
                                             </div>
                                         )}
-                                        <Button type="submit" disabled={loading || (!m3uUrl && !m3uContent)} className="w-full bg-[#E50914] hover:bg-[#F40612] text-white h-11 font-semibold" data-testid="m3u-submit">
+                                        <Button type="submit" disabled={loading || (!m3uUrl && !m3uContent)} className="w-full bg-brand hover:bg-[#F40612] text-white h-10 font-semibold" data-testid="m3u-submit">
                                             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
                                             Load Playlist
                                         </Button>
@@ -307,7 +307,7 @@ export default function Login() {
                                         <p className="text-sm text-zinc-300 leading-relaxed">
                                             Explore a curated demo library with live channels, movies, and series featuring public-domain HLS streams.
                                         </p>
-                                        <Button onClick={loadDemo} disabled={loading} className="w-full bg-[#E50914] hover:bg-[#F40612] text-white h-11 font-semibold" data-testid="demo-load">
+                                        <Button onClick={loadDemo} disabled={loading} className="w-full bg-brand hover:bg-[#F40612] text-white h-10 font-semibold" data-testid="demo-load">
                                             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                                             Load Demo Library
                                         </Button>
@@ -319,21 +319,21 @@ export default function Login() {
                             </Tabs>
 
                             {saved.length > 0 && (
-                                <div className="mt-7 pt-6 border-t border-white/10">
-                                    <div className="text-xs tracking-[0.2em] uppercase font-bold text-zinc-500 mb-3">Saved Accounts</div>
-                                    <div className="space-y-2 max-h-48 overflow-y-auto thin-scroll">
+                                <div className="mt-5 pt-4 border-t border-white/10">
+                                    <div className="text-[10px] tracking-[0.2em] uppercase font-bold text-zinc-500 mb-2">Saved Accounts</div>
+                                    <div className="space-y-2 max-h-36 overflow-y-auto thin-scroll">
                                         {saved.map((p) => (
                                             <div key={p.id} className="flex items-center justify-between p-3 rounded-md bg-[#0a0a0a] border border-white/10 hover:border-white/30" data-testid={`saved-${p.id}`}>
                                                 <div className="min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <Tv className="w-4 h-4 text-[#E50914]" />
+                                                        <Tv className="w-4 h-4 text-brand" />
                                                         <span className="text-sm font-semibold truncate">{p.name}</span>
-                                                        {p.is_active && <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#E50914]/20 text-[#E50914] font-bold">Active</span>}
+                                                        {p.is_active && <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand/20 text-brand font-bold">Active</span>}
                                                     </div>
                                                     <div className="text-xs text-zinc-500 mt-0.5">{p.type.toUpperCase()} · {p.server_url || p.m3u_url || "Local"}</div>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <button onClick={() => activate(p.id)} className="px-3 py-1.5 rounded-md bg-[#E50914] text-xs font-bold hover:bg-[#F40612]" data-testid={`activate-${p.id}`}>
+                                                    <button onClick={() => activate(p.id)} className="px-3 py-1.5 rounded-md bg-brand text-xs font-bold hover:bg-[#F40612]" data-testid={`activate-${p.id}`}>
                                                         <Play className="w-3.5 h-3.5 inline -mt-0.5 mr-1" />
                                                         Use
                                                     </button>
@@ -346,6 +346,27 @@ export default function Login() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Backend Server Config */}
+                            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">API Server:</span>
+                                <input
+                                    type="text"
+                                    data-testid="backend-url-input"
+                                    className="bg-transparent text-xs text-zinc-400 text-right focus:outline-none focus:text-white min-w-[200px]"
+                                    defaultValue={localStorage.getItem("maxx_backend_url") || ""}
+                                    placeholder="Default (Auto-detected)"
+                                    onBlur={(e) => {
+                                        const val = e.target.value.trim();
+                                        if (val) {
+                                            localStorage.setItem("maxx_backend_url", val);
+                                        } else {
+                                            localStorage.removeItem("maxx_backend_url");
+                                        }
+                                        window.location.reload();
+                                    }}
+                                />
+                            </div>
                         </Card>
                     </div>
                 </div>

@@ -17,7 +17,7 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
         }} />
         <div className="relative flex flex-col gap-5">
           <div className="flex items-center justify-center rounded-2xl"
-            style={{ width: 72, height: 72, background: 'linear-gradient(135deg, #E50914, #B80710)', boxShadow: '0 0 36px rgba(229,9,20,0.4)' }}>
+            style={{ width: 72, height: 72, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', boxShadow: '0 0 36px rgba(229,9,20,0.4)' }}>
             <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
               <path d="M12 8L38 24L12 40V8Z" fill="white" />
               <circle cx="36" cy="12" r="5" fill="rgba(255,255,255,0.6)" />
@@ -25,13 +25,13 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
           </div>
           <div>
             <h1 className="text-3xl font-black" style={{ color: '#f8fafc', letterSpacing: '-0.5px' }}>
-              Maxx<span style={{ color: '#E50914' }}>Player</span>
+              Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
             </h1>
             <p className="text-sm mt-1" style={{ color: '#475569' }}>Select a playlist to continue</p>
           </div>
           <div className="flex flex-col gap-2 mt-2">
             {[
-              { label: 'Live Channels', value: `${playlists.reduce((a, p) => a + p.channelCount, 0).toLocaleString()}+`, color: '#E50914' },
+              { label: 'Live Channels', value: `${playlists.reduce((a, p) => a + p.channelCount, 0).toLocaleString()}+`, color: 'var(--brand-primary)' },
               { label: 'Active Playlists', value: String(playlists.filter(p => p.status === 'active').length), color: '#22c55e' },
               { label: 'Connection', value: 'Secure', color: '#22c55e' },
             ].map(({ label, value, color }) => (
@@ -65,7 +65,7 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
                     background: pl.status === 'active' ? 'rgba(229,9,20,0.12)' : pl.status === 'syncing' ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)',
                     border: `1px solid ${pl.status === 'active' ? 'rgba(229,9,20,0.25)' : pl.status === 'syncing' ? 'rgba(245,158,11,0.25)' : 'rgba(239,68,68,0.25)'}`,
                   }}>
-                  {pl.status === 'active' && <Wifi size={24} style={{ color: '#E50914' }} />}
+                  {pl.status === 'active' && <Wifi size={24} style={{ color: 'var(--brand-primary)' }} />}
                   {pl.status === 'syncing' && <Loader size={24} style={{ color: '#f59e0b' }} />}
                   {pl.status === 'error' && <WifiOff size={24} style={{ color: '#ef4444' }} />}
                 </div>
@@ -99,7 +99,7 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
                     </div>
                   )}
                   <div className="flex items-center justify-center rounded-xl"
-                    style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #E50914, #B80710)' }}>
+                    style={{ width: 40, height: 40, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)' }}>
                     <ChevronRight size={20} style={{ color: '#fff' }} />
                   </div>
                 </div>
@@ -110,11 +110,11 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
           {/* Actions row */}
           <div className="flex gap-3 mt-1">
             <button tabIndex={0} className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold group focus:outline-none"
-              style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: '#E50914' }}>
+              style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: 'var(--brand-primary)' }}>
               <RefreshCw size={18} /> Refresh All Playlists
             </button>
             <button tabIndex={0} className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold group focus:outline-none"
-              style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: '#E50914' }}>
+              style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', color: 'var(--brand-primary)' }}>
               <Plus size={18} /> Add New Playlist
             </button>
           </div>
@@ -122,10 +122,10 @@ export default function TVPlaylistScreen({ onNavigate }: Props) {
           {/* Portal note */}
           <div className="rounded-2xl p-4" style={{ background: 'rgba(229,9,20,0.05)', border: '1px solid rgba(229,9,20,0.12)' }}>
             <div className="flex items-center gap-3">
-              <CheckCircle2 size={22} style={{ color: '#E50914', flexShrink: 0 }} />
+              <CheckCircle2 size={22} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} />
               <div>
                 <p className="text-sm font-bold" style={{ color: '#e2e8f0' }}>Manage via Web Portal</p>
-                <p className="text-sm" style={{ color: '#475569' }}>Add and manage all your playlists at <span style={{ color: '#E50914' }}>my.maxxplayer.com</span></p>
+                <p className="text-sm" style={{ color: '#475569' }}>Add and manage all your playlists at <span style={{ color: 'var(--brand-primary)' }}>my.maxxplayer.com</span></p>
               </div>
             </div>
           </div>

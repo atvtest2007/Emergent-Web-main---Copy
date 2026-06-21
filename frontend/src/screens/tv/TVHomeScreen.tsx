@@ -36,7 +36,7 @@ export default function TVHomeScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-10 h-10 animate-spin text-[#E50914]" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function TVHomeScreen() {
               src={featured.stream_icon || featured.cover || "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1"}
               alt={featured.name}
               className="w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.src = "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1" }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.pexels.com/photos/7234213/pexels-photo-7234213.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1" }}
             />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(8,12,20,0.97) 0%, rgba(8,12,20,0.7) 45%, rgba(8,12,20,0.1) 100%)' }} />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #030608 0%, transparent 40%)' }} />
@@ -66,7 +66,7 @@ export default function TVHomeScreen() {
             <div className="absolute inset-0 flex flex-col justify-center pl-8 pr-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs px-2.5 py-1 rounded-full font-black tracking-widest"
-                  style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', fontSize: 9, letterSpacing: '0.1em' }}>
+                  style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', fontSize: 9, letterSpacing: '0.1em' }}>
                   FEATURED
                 </span>
                 {featured.rating && (
@@ -85,7 +85,7 @@ export default function TVHomeScreen() {
               <div className="flex items-center gap-3 mt-4">
                 <button tabIndex={0} onClick={() => navigate(`/watch/movie/${featured.stream_id}`)}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-sm"
-                  style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', boxShadow: '0 4px 20px rgba(229,9,20,0.45)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', boxShadow: '0 4px 20px rgba(229,9,20,0.45)' }}
                 >
                   <Play size={15} fill="white" /> Play Now
                 </button>
@@ -118,7 +118,7 @@ export default function TVHomeScreen() {
                     <div className="absolute bottom-0 left-0 right-0 px-2 pb-1.5">
                       <p className="text-xs font-semibold text-white truncate" style={{ fontSize: 10 }}>{m.name}</p>
                       <div className="h-0.5 rounded-full mt-1 w-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, (c.progress || 0) * 100)}%`, background: '#E50914' }} />
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, (c.progress || 0) * 100)}%`, background: 'var(--brand-primary)' }} />
                       </div>
                     </div>
                     <FocusBorder />
@@ -136,7 +136,7 @@ export default function TVHomeScreen() {
                   className="flex-shrink-0 rounded-xl overflow-hidden relative group"
                   style={{ width: 100, height: 150, border: '1px solid #2A2A2A' }}
                 >
-                  <img src={m.stream_icon} alt={m.name} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"} />
+                  <img src={m.stream_icon} alt={m.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }} />
                   <div className="absolute inset-x-0 bottom-0 p-1.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}>
                     <p className="text-white font-semibold truncate" style={{ fontSize: 9 }}>{m.name}</p>
                     {m.rating && (
@@ -160,7 +160,7 @@ export default function TVHomeScreen() {
                   className="flex-shrink-0 rounded-xl overflow-hidden relative group"
                   style={{ width: 100, height: 150, border: '1px solid #2A2A2A' }}
                 >
-                  <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"} />
+                  <img src={s.cover} alt={s.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }} />
                   <div className="absolute inset-x-0 bottom-0 p-1.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}>
                     <p className="text-white font-semibold truncate" style={{ fontSize: 9 }}>{s.name}</p>
                   </div>
@@ -197,7 +197,7 @@ export default function TVHomeScreen() {
   );
 }
 
-function ShelfRow({ title, badge, badgeColor = '#E50914', onSeeAll, children }: {
+function ShelfRow({ title, badge, badgeColor = 'var(--brand-primary)', onSeeAll, children }: {
   title: string; badge?: string; badgeColor?: string; onSeeAll: () => void; children: React.ReactNode;
 }) {
   return (
@@ -226,7 +226,7 @@ function FocusBorder() {
   return (
     <div
       className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 group-focus:opacity-100"
-      style={{ border: '2px solid #E50914', boxShadow: '0 0 16px rgba(229,9,20,0.4)', transition: 'opacity 0.15s', zIndex: 10 }}
+      style={{ border: '2px solid var(--brand-primary)', boxShadow: '0 0 16px rgba(229,9,20,0.4)', transition: 'opacity 0.15s', zIndex: 10 }}
     />
   );
 }

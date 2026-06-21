@@ -24,7 +24,7 @@ export default function CatchUpScreen() {
           <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
             {days.map((d, i) => (
               <button key={d} className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold"
-                style={{ background: i === 5 ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A', color: i === 5 ? '#fff' : '#64748b', border: i === 5 ? 'none' : '1px solid #2A2A2A' }}>
+                style={{ background: i === 5 ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A', color: i === 5 ? '#fff' : '#64748b', border: i === 5 ? 'none' : '1px solid #2A2A2A' }}>
                 {d}
               </button>
             ))}
@@ -63,9 +63,9 @@ export default function CatchUpScreen() {
                       border: `1px solid ${idx === 2 ? 'rgba(229,9,20,0.3)' : '#1a2030'}`,
                     }}
                   >
-                    <Clock size={12} style={{ color: idx === 2 ? '#E50914' : '#475569' }} />
+                    <Clock size={12} style={{ color: idx === 2 ? 'var(--brand-primary)' : '#475569' }} />
                     <span className="text-xs font-semibold" style={{ color: idx === 2 ? '#38bdf8' : '#64748b' }}>{slot}</span>
-                    <Play size={10} style={{ color: idx === 2 ? '#E50914' : '#334155' }} />
+                    <Play size={10} style={{ color: idx === 2 ? 'var(--brand-primary)' : '#334155' }} />
                   </button>
                 ))}
               </div>

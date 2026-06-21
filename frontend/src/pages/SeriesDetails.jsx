@@ -18,7 +18,7 @@ export default function SeriesDetails() {
             setLoading(true);
             try {
                 const [d, favs, progress] = await Promise.all([
-                    Content.series(id),
+                    Content.series(id).catch(() => null),
                     Favorites.list().catch(() => []),
                     Progress.list().catch(() => []),
                 ]);
@@ -49,7 +49,13 @@ export default function SeriesDetails() {
             await Favorites.add({
                 content_type: "series",
                 content_id: id,
-                content_data: { name: data.name || data.title, cover: data.cover, year: data.year, rating: data.rating, genre: data.genre },
+                content_data: { 
+                    name: data.name || data.title || data.info?.name, 
+                    cover: data.cover || data.info?.cover || data.info?.backdrop_path, 
+                    year: data.year || data.info?.year, 
+                    rating: data.rating || data.info?.rating, 
+                    genre: data.genre || data.info?.genre 
+                },
             });
             setIsFav(true);
             toast.success("Added to favorites");
@@ -57,7 +63,7 @@ export default function SeriesDetails() {
     };
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#E50914]" /></div>;
+        return <div className="h-full min-h-[80vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-brand" /></div>;
     }
     if (!data) return <div className="px-12 py-20 text-zinc-400">Series not found.</div>;
 
@@ -78,7 +84,7 @@ export default function SeriesDetails() {
                     <div className="flex gap-8 items-end">
                         <img src={poster} alt={title} className="hidden md:block w-40 lg:w-52 rounded-md shadow-2xl shadow-black/60 border border-white/10" />
                         <div className="animate-fade-up">
-                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2">Series · {data.seasons?.length || 0} Seasons</div>
+                            <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2">Series · {data.seasons?.length || 0} Seasons</div>
                             <h1 className="font-display text-4xl lg:text-6xl font-black tracking-tighter leading-[0.95]">{title}</h1>
                             <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-zinc-300">
                                 {data.year && <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-zinc-500" />{data.year}</span>}
@@ -93,12 +99,17 @@ export default function SeriesDetails() {
             <div className="px-6 lg:px-12 max-w-7xl mx-auto pb-16 -mt-2 relative z-10">
                 <div className="flex flex-wrap gap-3 mb-8">
                     {currentSeason?.episodes?.[0] && (
-                        <Link to={`/watch/episode/${currentSeason.episodes[0].id}`} className="inline-flex items-center gap-2 px-7 py-3 rounded-md bg-[#E50914] hover:bg-[#F40612] font-semibold transition shadow-xl shadow-red-900/30" data-testid="series-play-btn">
+                        <Link 
+                            to={`/watch/episode/${currentSeason.episodes[0].id}`} 
+                            state={{ meta: { title: currentSeason.episodes[0].title, poster: currentSeason.episodes[0].thumbnail || poster || backdrop } }}
+                            className="inline-flex items-center gap-2 px-7 py-3 rounded-md bg-brand hover:bg-[#F40612] font-semibold transition shadow-xl shadow-red-900/30" 
+                            data-testid="series-play-btn"
+                        >
                             <Play className="w-5 h-5 fill-white" /> Play S{currentSeason.season_number}E{currentSeason.episodes[0].episode_num}
                         </Link>
                     )}
-                    <button onClick={toggleFav} className={`inline-flex items-center gap-2 px-5 py-3 rounded-md border font-semibold transition ${isFav ? "bg-[#E50914]/20 border-[#E50914] text-white" : "bg-white/5 border-white/10 hover:bg-white/10"}`} data-testid="series-favorite-btn">
-                        <Heart className={`w-5 h-5 ${isFav ? "fill-[#E50914] text-[#E50914]" : ""}`} />
+                    <button onClick={toggleFav} className={`inline-flex items-center gap-2 px-5 py-3 rounded-md border font-semibold transition ${isFav ? "bg-brand/20 border-brand text-white" : "bg-white/5 border-white/10 hover:bg-white/10"}`} data-testid="series-favorite-btn">
+                        <Heart className={`w-5 h-5 ${isFav ? "fill-[var(--brand-primary)] text-brand" : ""}`} />
                         {isFav ? "Favorited" : "Favorite"}
                     </button>
                 </div>
@@ -117,7 +128,7 @@ export default function SeriesDetails() {
                                     <button
                                         key={s.season_number}
                                         onClick={() => setSeason(s.season_number)}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase transition ${season === s.season_number ? "bg-[#E50914] text-white" : "bg-white/5 hover:bg-white/10 text-zinc-300"}`}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase transition ${season === s.season_number ? "bg-brand text-white" : "bg-white/5 hover:bg-white/10 text-zinc-300"}`}
                                         data-testid={`season-${s.season_number}`}
                                     >
                                         Season {s.season_number}
@@ -126,27 +137,33 @@ export default function SeriesDetails() {
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 5xl:grid-cols-8 gap-4 4xl:gap-6">
                             {currentSeason?.episodes?.map((ep) => {
                                 const epProgress = progressMap[ep.id] || 0;
                                 return (
                                     <Link
                                         key={ep.id}
                                         to={`/watch/episode/${ep.id}`}
-                                        className="group flex gap-4 p-3 rounded-md bg-[#121212] border border-white/5 hover:border-[#E50914]/40 hover:bg-[#1a1a1a] transition"
+                                        state={{ meta: { title: ep.title, poster: ep.thumbnail || poster || backdrop } }}
+                                        className="group flex gap-4 p-3 rounded-md bg-[#121212] border border-white/5 hover:border-brand/40 hover:bg-[#1a1a1a] transition"
                                         data-testid={`episode-${ep.id}`}
                                     >
                                         <div className="relative w-44 aspect-video rounded-md overflow-hidden bg-black shrink-0">
-                                            <img src={ep.thumbnail || data.cover} alt={ep.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            <img 
+                                                src={ep.info?.movie_image || ep.info?.cover || ep.thumbnail || poster || backdrop} 
+                                                alt={ep.title} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = poster || backdrop || "https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop"; }}
+                                            />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition" />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                                <div className="w-12 h-12 rounded-full bg-[#E50914] flex items-center justify-center">
+                                                <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center">
                                                     <Play className="w-5 h-5 fill-white ml-0.5" />
                                                 </div>
                                             </div>
                                             {epProgress > 0 && (
                                                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/15">
-                                                    <div className="h-full bg-[#E50914]" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
+                                                    <div className="h-full bg-brand" style={{ width: `${Math.min(100, epProgress * 100)}%` }} />
                                                 </div>
                                             )}
                                         </div>

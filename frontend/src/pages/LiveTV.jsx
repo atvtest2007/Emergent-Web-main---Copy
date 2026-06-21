@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Content } from "@/lib/api";
 import ChannelCard from "@/components/ChannelCard";
+import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search } from "lucide-react";
-import { useParentalControls } from "@/hooks/useParentalControls";
 
 export default function LiveTV() {
     const [loading, setLoading] = useState(true);
@@ -11,7 +11,8 @@ export default function LiveTV() {
     const [categories, setCategories] = useState([]);
     const [cat, setCat] = useState("all");
     const [q, setQ] = useState("");
-    const { isCategoryLocked, unlock, renderModal } = useParentalControls();
+    const [page, setPage] = useState(1);
+    const limit = 60;
 
     useEffect(() => {
         (async () => {
@@ -39,10 +40,17 @@ export default function LiveTV() {
         return list;
     }, [channels, cat, q]);
 
+    useEffect(() => {
+        setPage(1);
+    }, [cat, q]);
+
+    const totalPages = Math.ceil(filtered.length / limit);
+    const paginated = filtered.slice((page - 1) * limit, page * limit);
+
     return (
-        <div className="px-6 lg:px-12 py-8 pt-12" data-testid="live-tv-page">
+        <div className="px-6 md:px-12 2xl:px-24 4xl:px-32 5xl:px-48 uw:px-64 py-8 pt-12 4xl:py-16 4xl:pt-20" data-testid="live-tv-page">
             <div className="mb-8">
-                <div className="text-xs tracking-[0.32em] uppercase font-bold text-[#E50914] mb-2">Channels</div>
+                <div className="text-xs tracking-[0.32em] uppercase font-bold text-brand mb-2">Channels</div>
                 <h1 className="font-display text-5xl lg:text-6xl font-black tracking-tighter">Live TV</h1>
                 <p className="text-zinc-400 mt-2 max-w-xl">All your channels in one place. Switch instantly, see what's on, jump to EPG.</p>
             </div>
@@ -54,17 +62,17 @@ export default function LiveTV() {
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                         placeholder="Search channels..."
-                        className="pl-9 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-[#E50914]"
+                        className="pl-9 bg-[#0a0a0a] border-white/10 text-zinc-100 focus:border-brand"
                         data-testid="live-search"
                     />
                 </div>
                 <div className="flex flex-wrap gap-2 overflow-x-auto rail-scroll">
                     <button
                         onClick={() => setCat("all")}
-                        className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase whitespace-nowrap transition ${cat === "all" ? "bg-[#E50914] text-white" : "bg-white/5 text-zinc-300 hover:bg-white/10"}`}
+                        className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase whitespace-nowrap transition ${cat === "all" ? "bg-brand text-white" : "bg-white/5 text-zinc-300 hover:bg-white/10"}`}
                         data-testid="cat-all"
                     >
-                        All ({channels.length})
+                        All Categories ({channels.length})
                     </button>
                     {categories.map((c) => {
                         const count = channels.filter((ch) => ch.category_id === c.category_id).length;
@@ -72,7 +80,7 @@ export default function LiveTV() {
                             <button
                                 key={c.category_id}
                                 onClick={() => setCat(c.category_id)}
-                                className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase whitespace-nowrap transition ${cat === c.category_id ? "bg-[#E50914] text-white" : "bg-white/5 text-zinc-300 hover:bg-white/10"}`}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wider uppercase whitespace-nowrap transition ${cat === c.category_id ? "bg-brand text-white" : "bg-white/5 text-zinc-300 hover:bg-white/10"}`}
                                 data-testid={`cat-${c.category_id}`}
                             >
                                 {c.category_name} ({count})
@@ -84,23 +92,27 @@ export default function LiveTV() {
 
             {loading ? (
                 <div className="flex items-center justify-center py-24">
-                    <Loader2 className="w-10 h-10 animate-spin text-[#E50914]" />
+                    <Loader2 className="w-10 h-10 animate-spin text-brand" />
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="text-center py-20 text-zinc-400">No channels match your filters.</div>
             ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filtered.map((c) => (
-                        <ChannelCard 
-                            key={c.stream_id} 
-                            channel={c} 
-                            isLocked={isCategoryLocked(c.category_name)}
-                            onUnlock={unlock}
+                <>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 3xl:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] 4xl:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] 5xl:grid-cols-[repeat(auto-fill,minmax(500px,1fr))] gap-4 4xl:gap-6">
+                        {paginated.map((c, idx) => <ChannelCard key={`${c.stream_id}-${idx}`} channel={c} />)}
+                    </div>
+                    {totalPages > 1 && (
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={(p) => {
+                                setPage(p);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                         />
-                    ))}
-                </div>
+                    )}
+                </>
             )}
-            {renderModal()}
         </div>
     );
 }

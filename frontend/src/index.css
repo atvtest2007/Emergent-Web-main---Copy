@@ -4,6 +4,7 @@
 
 @layer base {
     :root {
+        --brand-primary: #E50914;
         --background: 0 0% 2%;
         --foreground: 0 0% 96%;
         --card: 0 0% 7%;
@@ -55,6 +56,15 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @layer base {
     * {
         @apply border-border;
+    }
+}
+
+@supports (padding: max(0px)) {
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
+    .px-safe { 
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
     }
 }
 
@@ -135,7 +145,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Selection style */
 ::selection {
-    background: #E50914;
+    background: var(--brand-primary);
     color: #fff;
 }
 
@@ -143,21 +153,20 @@ h1, h2, h3, h4, h5, h6, .font-display {
 input[type="range"].player-range {
     -webkit-appearance: none;
     background: transparent;
-    height: 4px;
+    height: 16px; /* Larger hit area */
     cursor: pointer;
 }
 input[type="range"].player-range::-webkit-slider-runnable-track {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 999px;
+    height: 100%;
+    background: transparent;
 }
 input[type="range"].player-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     height: 14px;
     width: 14px;
-    background: #E50914;
+    background: var(--brand-primary);
     border-radius: 50%;
-    margin-top: -5px;
+    margin-top: 1px; /* Center in the 16px height */
     box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.25);
     transition: transform 0.2s;
 }
@@ -165,14 +174,13 @@ input[type="range"].player-range:hover::-webkit-slider-thumb {
     transform: scale(1.15);
 }
 input[type="range"].player-range::-moz-range-track {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 999px;
+    height: 100%;
+    background: transparent;
 }
 input[type="range"].player-range::-moz-range-thumb {
     height: 14px;
     width: 14px;
-    background: #E50914;
+    background: var(--brand-primary);
     border-radius: 50%;
     border: none;
 }
@@ -181,25 +189,8 @@ input[type="range"].player-range::-moz-range-thumb {
     display: contents !important;
 }
 
-/* macOS Specific Overrides */
-.mac-titlebar {
-    -webkit-app-region: drag;
-    height: 38px;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    pointer-events: none; /* Let clicks pass through to underlying elements except for drag */
-}
-
-/* Add padding to sidebar and main content if on Mac to avoid traffic lights */
-.mac-os .sidebar-logo-container {
-    padding-top: 42px !important;
-}
-
-/* Ensure no-drag regions */
-.no-drag {
-    -webkit-app-region: no-drag;
-    pointer-events: auto;
-}
+/* Video Player Aspect Ratios */
+.fit-contain video { object-fit: contain; }
+.fit-fill video { object-fit: fill; }
+.fit-cover video { object-fit: cover; }
+.fit-zoom video { object-fit: cover; transform: scale(1.15); }

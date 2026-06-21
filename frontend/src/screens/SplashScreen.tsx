@@ -28,7 +28,7 @@ export default function SplashScreen() {
           className="flex items-center justify-center rounded-3xl"
           style={{
             width: 88, height: 88,
-            background: 'linear-gradient(135deg, #E50914 0%, #B80710 100%)',
+            background: 'linear-gradient(135deg, var(--brand-primary) 0%, #B80710 100%)',
             boxShadow: '0 0 40px rgba(229,9,20,0.4), 0 8px 32px rgba(0,0,0,0.4)',
           }}
         >
@@ -39,7 +39,7 @@ export default function SplashScreen() {
         </div>
         <div className="text-center">
           <h1 className="text-4xl font-black tracking-tight" style={{ color: '#f8fafc' }}>
-            Maxx<span style={{ color: '#E50914' }}>Player</span>
+            Maxx<span style={{ color: 'var(--brand-primary)' }}>Player</span>
           </h1>
           <p className="text-sm mt-1 font-medium" style={{ color: '#64748b' }}>Stream Everything</p>
         </div>
@@ -47,7 +47,7 @@ export default function SplashScreen() {
       <div className="absolute bottom-24 flex flex-col items-center gap-3">
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-full" style={{ width: 6, height: 6, background: i === 1 ? '#E50914' : '#1e293b', opacity: i === 1 ? 1 : 0.5 }} />
+            <div key={i} className="rounded-full" style={{ width: 6, height: 6, background: i === 1 ? 'var(--brand-primary)' : '#1e293b', opacity: i === 1 ? 1 : 0.5 }} />
           ))}
         </div>
         <p className="text-xs font-medium" style={{ color: '#475569' }}>Loading your content...</p>

@@ -35,7 +35,7 @@ export default function TVLiveTVScreen() {
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#030608' }}>
-        <Loader2 className="w-10 h-10 animate-spin text-[#E50914]" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function TVLiveTVScreen() {
             <button tabIndex={0} onClick={() => setCat("all")}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
               style={{
-                background: cat === "all" ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                background: cat === "all" ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                 color: cat === "all" ? '#fff' : '#64748b',
                 border: cat === "all" ? 'none' : '1px solid #2A2A2A',
               }}>
@@ -73,7 +73,7 @@ export default function TVLiveTVScreen() {
                   onClick={() => setCat(c.category_id)}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
                   style={{
-                    background: isSelected ? 'linear-gradient(135deg, #E50914, #B80710)' : '#1A1A1A',
+                    background: isSelected ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#1A1A1A',
                     color: isSelected ? '#fff' : '#64748b',
                     border: isSelected ? 'none' : '1px solid #2A2A2A',
                   }}>
@@ -91,7 +91,7 @@ export default function TVLiveTVScreen() {
             {filtered.map((ch, idx) => (
               <button tabIndex={0} key={ch.stream_id}
                 onClick={() => navigate(`/watch/live/${ch.stream_id}`)}
-                className="flex items-center gap-3 p-2.5 rounded-xl w-full text-left focus:outline-none focus:ring-2 focus:ring-[#E50914] focus:bg-[#1A1A1A]"
+                className="flex items-center gap-3 p-2.5 rounded-xl w-full text-left focus:outline-none focus:ring-2 focus:ring-brand focus:bg-[#1A1A1A]"
                 style={{
                   background: idx === 0 ? 'linear-gradient(135deg, rgba(229,9,20,0.15), rgba(229,9,20,0.05))' : '#1A1A1A',
                   border: `1px solid ${idx === 0 ? 'rgba(229,9,20,0.3)' : '#1a2030'}`,
@@ -163,7 +163,7 @@ export default function TVLiveTVScreen() {
 
                 <button tabIndex={0} onClick={() => navigate(`/watch/live/${selectedChannel.stream_id}`)}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-sm mt-4"
-                  style={{ background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', boxShadow: '0 4px 16px rgba(229,9,20,0.4)', width: 'fit-content' }}
+                  style={{ background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', boxShadow: '0 4px 16px rgba(229,9,20,0.4)', width: 'fit-content' }}
                 >
                   <Play size={15} fill="white" /> Watch Live
                 </button>

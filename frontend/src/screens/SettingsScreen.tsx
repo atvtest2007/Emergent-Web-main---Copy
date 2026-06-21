@@ -12,7 +12,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         width: 44,
         height: 26,
         borderRadius: 13,
-        background: on ? 'linear-gradient(135deg, #E50914, #B80710)' : '#2A2A2A',
+        background: on ? 'linear-gradient(135deg, var(--brand-primary), #B80710)' : '#2A2A2A',
         transition: 'background 0.2s',
         boxShadow: on ? '0 0 10px rgba(229,9,20,0.35)' : 'none',
       }}
@@ -98,7 +98,7 @@ export default function SettingsScreen() {
         >
           <div className="relative flex-shrink-0">
             <div className="flex items-center justify-center rounded-2xl font-black text-2xl"
-              style={{ width: 58, height: 58, background: 'linear-gradient(135deg, #E50914, #B80710)', color: '#fff', boxShadow: '0 0 20px rgba(229,9,20,0.3)' }}>
+              style={{ width: 58, height: 58, background: 'linear-gradient(135deg, var(--brand-primary), #B80710)', color: '#fff', boxShadow: '0 0 20px rgba(229,9,20,0.3)' }}>
               M
             </div>
             <div className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
 
         {/* General */}
         <SettingGroup title="General">
-          <SettingRow icon={Globe} iconColor="#E50914" label="Language" value="English" showChevron />
+          <SettingRow icon={Globe} iconColor="var(--brand-primary)" label="Language" value="English" showChevron />
           <SettingRow icon={Bell} iconColor="#22c55e" label="Notifications">
             <Toggle on={notifications} onToggle={() => setNotifications(!notifications)} />
           </SettingRow>
@@ -175,7 +175,7 @@ export default function SettingsScreen() {
           <SettingRow icon={Play} iconColor="#f59e0b" label="Autoplay Next Episode">
             <Toggle on={autoplay} onToggle={() => setAutoplay(!autoplay)} />
           </SettingRow>
-          <SettingRow icon={Tv2} iconColor="#E50914" label="Hardware Acceleration">
+          <SettingRow icon={Tv2} iconColor="var(--brand-primary)" label="Hardware Acceleration">
             <Toggle on={hwAccel} onToggle={() => setHwAccel(!hwAccel)} />
           </SettingRow>
         </SettingGroup>
@@ -183,10 +183,10 @@ export default function SettingsScreen() {
         {/* Data */}
         <SettingGroup title="Data & Sync">
           <SettingRow icon={HardDrive} iconColor="#f59e0b" label="Clear Cache" value="124 MB" showChevron />
-          <SettingRow icon={RefreshCw} iconColor="#E50914" label="Refresh Playlists" showChevron>
+          <SettingRow icon={RefreshCw} iconColor="var(--brand-primary)" label="Refresh Playlists" showChevron>
             <button
               className="text-xs font-bold px-3 py-1.5 rounded-lg"
-              style={{ background: 'rgba(229,9,20,0.1)', color: '#E50914', border: '1px solid rgba(229,9,20,0.2)' }}
+              style={{ background: 'rgba(229,9,20,0.1)', color: 'var(--brand-primary)', border: '1px solid rgba(229,9,20,0.2)' }}
             >
               Sync Now
             </button>
@@ -206,7 +206,7 @@ export default function SettingsScreen() {
             </div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm" style={{ color: '#64748b' }}>Portal</span>
-              <span className="text-sm font-semibold" style={{ color: '#E50914' }}>my.maxxplayer.com</span>
+              <span className="text-sm font-semibold" style={{ color: 'var(--brand-primary)' }}>my.maxxplayer.com</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm" style={{ color: '#64748b' }}>Last Sync</span>
