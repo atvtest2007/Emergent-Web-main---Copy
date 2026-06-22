@@ -1,6 +1,10 @@
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, Play, Clock, Info } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import type { Screen } from '@/types';
+import React, { useEffect, useState } from 'react';
+import { Virtuoso } from 'react-virtuoso';
+import { Content } from '@/lib/api';
+
 
 const epgCategories = ['All', 'Sports', 'News', 'Movies', 'Entertainment', 'Documentary', 'Kids'];
 const epgData = [
@@ -11,7 +15,64 @@ const epgData = [
 
 const timeSlots = ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'];
 
+
+const MobileEpgRow = React.memo(({ channel }: { channel: any }) => {
+  const [progs, setProgs] = useState<any[]>([]);
+  
+  useEffect(() => {
+    let active = true;
+    Content.epg(channel.stream_id, 2).then(r => {
+      if (active && r && r.epg_listings) setProgs(r.epg_listings);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [channel.stream_id]);
+
+  const p1 = progs[0];
+  const p2 = progs[1];
+
+  const formatTime = (isoString: string) => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="flex items-stretch border-b" style={{ borderColor: '#2A2A2A', minHeight: 68 }}>
+      <div className="flex-shrink-0 flex items-center justify-center gap-2 px-3 py-2" style={{ width: 80, borderRight: '1px solid #2A2A2A', background: '#0d1117' }}>
+        <div className="flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center bg-black/30 border border-white/10" style={{ width: 36, height: 36 }}>
+          {channel.stream_icon ? <img src={channel.stream_icon} alt={channel.name} className="w-full h-full object-contain" /> : <div className="text-xs font-bold text-zinc-500">CH</div>}
+        </div>
+      </div>
+      <div className="flex items-center overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+        {p1 ? (
+          <div className="flex-shrink-0 flex flex-col justify-center px-3 py-2 m-1 rounded-xl relative"
+            style={{ minWidth: 140, background: 'linear-gradient(135deg, rgba(229,9,20,0.15), rgba(2,132,199,0.08))', border: '1px solid rgba(229,9,20,0.25)' }}>
+            <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full" style={{ background: 'var(--brand-primary)' }} />
+            <span className="text-xs font-semibold truncate" style={{ color: '#e2e8f0' }}>{p1.title}</span>
+            <span className="text-xs mt-0.5" style={{ color: '#64748b' }}>{formatTime(p1.start)} - {formatTime(p1.end)}</span>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 px-4 text-xs text-zinc-500 font-medium">No EPG Data Available</div>
+        )}
+        {p2 && (
+          <div className="flex-shrink-0 flex flex-col justify-center px-3 py-2 m-1 rounded-xl"
+            style={{ minWidth: 130, background: '#1A1A1A', border: '1px solid #2A2A2A' }}>
+            <span className="text-xs font-medium truncate" style={{ color: '#94a3b8' }}>{p2.title}</span>
+            <span className="text-xs mt-0.5" style={{ color: '#475569' }}>{formatTime(p2.start)} - {formatTime(p2.end)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 export default function EPGScreen() {
+  const [channels, setChannels] = useState<any[]>([]);
+
+  useEffect(() => {
+    Content.streams("live").then(res => setChannels(res || []));
+  }, []);
+
   return (
     <div className="absolute inset-0 flex flex-col" style={{ background: '#030608' }}>
       <div className="flex-shrink-0 pt-14 px-5 pb-3" style={{ background: 'linear-gradient(180deg, #141414 0%, #030608 100%)' }}>
@@ -57,28 +118,13 @@ export default function EPGScreen() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto pb-20">
-          {epgData.map((row, idx) => (
-            <div key={idx} className="flex items-stretch border-b" style={{ borderColor: '#2A2A2A', minHeight: 68 }}>
-              <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2" style={{ width: 80, borderRight: '1px solid #2A2A2A', background: '#0d1117' }}>
-                <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 36, height: 36 }}>
-                  <img src={row.logo} alt={row.channel} className="w-full h-full object-cover" />
-                </div>
-              </div>
-              <div className="flex items-center overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
-                <div className="flex-shrink-0 flex flex-col justify-center px-3 py-2 m-1 rounded-xl relative"
-                  style={{ minWidth: 140, background: 'linear-gradient(135deg, rgba(229,9,20,0.15), rgba(2,132,199,0.08))', border: '1px solid rgba(229,9,20,0.25)' }}>
-                  <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full" style={{ background: 'var(--brand-primary)' }} />
-                  <span className="text-xs font-semibold truncate" style={{ color: '#e2e8f0' }}>{row.now}</span>
-                  <span className="text-xs mt-0.5" style={{ color: '#64748b' }}>{row.nowTime}</span>
-                </div>
-                <div className="flex-shrink-0 flex flex-col justify-center px-3 py-2 m-1 rounded-xl"
-                  style={{ minWidth: 130, background: '#1A1A1A', border: '1px solid #2A2A2A' }}>
-                  <span className="text-xs font-medium truncate" style={{ color: '#94a3b8' }}>{row.next}</span>
-                  <span className="text-xs mt-0.5" style={{ color: '#475569' }}>{row.nextTime}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+          <Virtuoso
+            style={{ height: '100%', width: '100%' }}
+            totalCount={channels.length}
+            itemContent={(index) => {
+              return <MobileEpgRow channel={channels[index]} />;
+            }}
+          />
         </div>
       </div>
       <BottomNav active="home" />

@@ -56,6 +56,9 @@ DB_PATH = ROOT_DIR / "maxx.sqlite"
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("PRAGMA journal_mode=WAL;")
+        await db.execute("PRAGMA synchronous=NORMAL;")
+        await db.execute("PRAGMA temp_store=MEMORY;")
         await db.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -261,7 +264,7 @@ async def get_active_playlist_internal(request_playlist_id: Optional[str] = None
 def xtream_from_playlist(pl: dict[str, Any]) -> XtreamClient:
     if pl["type"] != "xtream":
         raise HTTPException(status_code=400, detail="Playlist is not an Xtream account")
-    return XtreamClient(pl["server_url"], pl["username"], pl["password"])
+    return XtreamClient(pl["server_url"], pl["username"], pl["password"], client=proxy_client)
 
 
 def clear_cache():
@@ -922,7 +925,7 @@ async def proxy_stream(request: Request, url: str = Query(...)):
         # Standard streaming for Video / TS Segments / Errors
         async def gen():
             try:
-                async for chunk in r.aiter_bytes(chunk_size=1024 * 1024):
+                async for chunk in r.aiter_bytes(chunk_size=64 * 1024):
                     yield chunk
             except asyncio.CancelledError:
                 pass

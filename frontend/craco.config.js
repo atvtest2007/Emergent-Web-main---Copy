@@ -64,6 +64,20 @@ let webpackConfig = {
         },
       });
 
+      // Ignore source-map-loader warnings for third-party libraries like capacitor-video-player
+      webpackConfig.ignoreWarnings = [
+        ...(webpackConfig.ignoreWarnings || []),
+        function ignoreSourcemapsloaderWarnings(warning) {
+          return (
+            warning.module &&
+            warning.module.resource.includes('node_modules') &&
+            warning.details &&
+            warning.details.includes('source-map-loader')
+          );
+        },
+        /Failed to parse source map/
+      ];
+
       return webpackConfig;
     },
   },

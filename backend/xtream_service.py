@@ -544,11 +544,12 @@ def parse_m3u(content: str) -> list[dict[str, Any]]:
 # ---------------------- Xtream API client ---------------------- #
 
 class XtreamClient:
-    def __init__(self, server: str, username: str, password: str, timeout: float = 15.0):
+    def __init__(self, server: str, username: str, password: str, timeout: float = 15.0, client: Optional[httpx.AsyncClient] = None):
         self.server = server.rstrip("/")
         self.username = username
         self.password = password
         self.timeout = timeout
+        self.client = client
 
     def _url(self, action: Optional[str] = None, **extra: Any) -> str:
         params: dict[str, Any] = {
@@ -564,13 +565,21 @@ class XtreamClient:
         headers = {
             "User-Agent": "VLC/3.0.9 LibVLC/3.0.9"
         }
-        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True, headers=headers) as client:
-            r = await client.get(url)
+        if self.client:
+            r = await self.client.get(url, headers=headers)
             r.raise_for_status()
             try:
                 return r.json()
             except Exception:
                 return r.text
+        else:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True, headers=headers) as client:
+                r = await client.get(url)
+                r.raise_for_status()
+                try:
+                    return r.json()
+                except Exception:
+                    return r.text
 
     async def account_info(self) -> dict[str, Any]:
         return await self._get(self._url())
